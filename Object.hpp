@@ -1,6 +1,13 @@
 #pragma once
 
+#include <array>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cmath>
+
 #include "Slice.hpp"
+#include "delaunator.hpp"
 
 using PointIdx = unsigned long;
 using PointSize = unsigned long;
@@ -17,6 +24,7 @@ struct Object {
     bool from_slices();
     bool make_points_from_slices();
     bool make_faces_from_slices();
+    bool make_begin_and_end_face();
 };
 
 std::vector<std::array<PointIdx, 3>> rect_face(PointIdx a, PointIdx b, PointIdx c, PointIdx d) {
@@ -49,8 +57,60 @@ bool Object::make_faces_from_slices() {
     }
 
     // t = 0 と t = slice_size の面をふさぐ
-    // make_begin_and_end_face();
+    make_begin_and_end_face();
 
+    return true;
+}
+
+bool Object::make_begin_and_end_face() {
+    PointSize slice_size = slices.size();
+    if (slice_size == 0) { false; }
+    PointSize slice_point_size = slices[0].points.size();
+    // 三角形分割
+    std::vector<double> begin_face_xy(slice_point_size * 2);
+    std::vector<double> end_face_xy(slice_point_size * 2);
+
+    // slices の最初と最後を同じループで参照するためにmove
+    auto begin_face_p = std::move(slices[0].points);
+    auto end_face_p = std::move(slices[slice_size - 1].points);
+
+    // Delaunator に渡すために { x0,  y0, x1, y1, ... } の vector に格納
+    // https://github.com/delfrrr/delaunator-cpp/blob/master/examples/basic.cpp
+    for (int i = 0; i < slice_point_size; i++) {
+        begin_face_xy[2*i] = begin_face_p[i].x;
+        begin_face_xy[2*i+1] = begin_face_p[i].y;
+        end_face_xy[2*i] = end_face_p[i].x;
+        end_face_xy[2*i+1] = end_face_p[i].y;
+    }
+    slices[0].points = std::move(begin_face_p);
+    slices[slice_size - 1].points = std::move(end_face_p);
+
+    delaunator::Delaunator d1(begin_face_xy);
+    delaunator::Delaunator d2(end_face_xy);
+    PointIdx end_fece_offset = (slice_size - 1) * slice_point_size;
+    decltype(faces) begin_face;
+    decltype(faces) end_face;
+    begin_face.reserve(d1.triangles.size()/3);
+    end_face.reserve(d2.triangles.size()/3);
+    for (int i = 0; i < d1.triangles.size(); i+=3) {
+        begin_face.push_back({
+            d1.triangles[i], d1.triangles[i+1], d1.triangles[i+2]
+        });
+    }
+    for (int i = 0; i < d2.triangles.size(); i+=3) {
+        end_face.push_back({
+            d2.triangles[i] + end_fece_offset,
+            d2.triangles[i+1] + end_fece_offset,
+            d2.triangles[i+2] + end_fece_offset
+        });
+    }
+
+    faces.insert(faces.end(),
+        begin_face.begin(), begin_face.end()
+    );
+    faces.insert(faces.end(),
+        end_face.begin(), end_face.end()
+    );
     return true;
 }
 
