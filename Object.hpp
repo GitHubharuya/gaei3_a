@@ -12,7 +12,24 @@ struct Object {
     std::vector<Object::Point3> points;
     std::vector<std::array<PointIdx, 3>> faces;
     std::vector<Slice> slices;
+    bool check_slice_point_size() const ;
+    bool from_slices();
 };
+
+bool Object::check_slice_point_size() const {
+    PointSize n = slices.size();
+    if (n == 0) return false;
+    PointSize slice_points_size = slices[0].points.size();
+    for (const auto& slice : slices) {
+        if (slice.points.size() != slice_points_size) return false;
+    }
+    return true;
+}
+
+bool Object::from_slices() {
+    return make_points_from_slices() &&
+        make_faces_from_slices();
+}
 
 std::istream& operator>>(std::istream& ist, Object& obj) {
     Slice slice;
