@@ -31,28 +31,47 @@ std::vector<std::array<PointIdx, 3>> rect_face(PointIdx a, PointIdx b, PointIdx 
     return {std::array{a, b, c}, std::array{c, d, a}};
 }
 
+std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointIdx, 4> pidxs, std::vector<Object::Point3>& points) {
+    double centx = 0, centy = 0, centz = 0;
+    for (auto i : pidxs) {
+        centx += points[i].x; centy += points[i].y; centz += points[i].z;
+    }
+    centx /= 4; centy /= 4; centz /= 4;
+    points.emplace_back(Object::Point3{centx, centy, centz});
+    PointIdx cidx = points.size() - 1;
+    std::vector<std::array<PointIdx, 3>> res;
+    res.reserve(4);
+    for (int i = 0; i < 4; i++) {
+        int nei = i == 3 ? 0 : i + 1;
+        res.emplace_back(std::array<PointIdx, 3>{pidxs[i], pidxs[nei], cidx});
+    }
+    return res;
+}
+
 bool Object::make_faces_from_slices() {
     int slice_size = slices.size();
     if (slice_size == 0) {
         return false;
     }
     int slice_point_size = slices[0].points.size();
+    unsigned long sideface_num = (slice_size-1) * slice_point_size;
     faces.clear();
-    faces.reserve((slice_size-1) * slice_point_size * 2); // 各側面につき三角形2枚
+    faces.reserve(sideface_num * 4); // 各側面につき三角形4枚
+    points.reserve(sideface_num + points.size()); // 各側面の重心を追加
     for (int t = 1; t < slice_size; t++) {
         PointIdx cur_offset = t * slice_point_size;
         PointIdx pre_offset = (t-1) * slice_point_size;
         for (int i = 1; i < slice_point_size; i++) {
-            auto face = rect_face(
+            auto face = rect_face_with_cent({
                  cur_offset + i, cur_offset + i-1, // 今の点
                  pre_offset + i-1, pre_offset + i // 一つ前の点
-            );
+            }, points);
             faces.insert(faces.end(), face.begin(), face.end());
         }
-        auto face = rect_face(
+        auto face = rect_face_with_cent({
              cur_offset + 0, cur_offset + slice_point_size-1, // 今の点
              pre_offset + slice_point_size-1, pre_offset + 0 // 一つ前の点
-        );
+        }, points);
         faces.insert(faces.end(), face.begin(), face.end());
     }
 
