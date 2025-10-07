@@ -9,12 +9,29 @@ struct Object {
     struct Point3 {
         double x, y, z;
     };
+    double LENGTH_PER_TIME = 1;
     std::vector<Object::Point3> points;
     std::vector<std::array<PointIdx, 3>> faces;
     std::vector<Slice> slices;
     bool check_slice_point_size() const ;
     bool from_slices();
+    bool make_points_from_slices();
 };
+
+bool Object::make_points_from_slices() {
+    points.clear();
+    points.reserve(slices.size());
+    double z = 0;
+    for (PointSize i = 0; i < slices.size(); i++) {
+        for (const auto& p : slices[i].points) {
+            points.emplace_back(Object::Point3{
+                p.x, p.y, z
+            });
+        }
+        z += LENGTH_PER_TIME;
+    }
+    return true;
+}
 
 bool Object::check_slice_point_size() const {
     PointSize n = slices.size();
