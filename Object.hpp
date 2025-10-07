@@ -105,12 +105,33 @@ bool Object::make_begin_and_end_face() {
         });
     }
 
+    // check direction
+    auto check_ccw = [&](PointIdx a, PointIdx b, PointIdx c) {
+        auto p0 = points[a], p1 = points[b], p2 = points[c];
+        double A = (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
+        return A > 0;
+    };
+
+    for (auto& tri : begin_face) {
+        if (check_ccw(tri[0], tri[1], tri[2])) {
+            // 手前から奥向き
+            std::swap(tri[1], tri[2]);
+        }
+    }
     faces.insert(faces.end(),
         begin_face.begin(), begin_face.end()
     );
+
+    for (auto& tri : end_face) {
+        if (!check_ccw(tri[0], tri[1], tri[2])) {
+            // 奥から手前向き
+            std::swap(tri[1], tri[2]);
+        }
+    }
     faces.insert(faces.end(),
         end_face.begin(), end_face.end()
     );
+
     return true;
 }
 
