@@ -17,6 +17,8 @@ struct Object {
         double x, y, z;
     };
     double LENGTH_PER_TIME = 1;
+    Object(double lpt) : LENGTH_PER_TIME(lpt) {};
+    Object() {};
     std::vector<Object::Point3> points;
     std::vector<std::array<PointIdx, 3>> faces;
     std::vector<Slice> slices;
