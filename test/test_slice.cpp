@@ -4,7 +4,7 @@
 #include <sstream>
 
 void slice_test() {
-    std::string str = "0, 0 0 0 1\n1, 2 2 0 2\n";
+    std::string str = "0., 0 0 0 1\n0.5, 2 2 0 2\n";
     std::istringstream iss{str};
     std::vector<Slice> sls;
 
@@ -27,10 +27,11 @@ void slice_test() {
         {{0, 0}, {0, 1}},
         {{2, 2}, {0, 2}}, 
     };
+    std::vector<double> expected_t = {0, 0.5};
     bool ok = true;
     if (sls.size() != expected.size()) { ok = false; }
     for (int i = 0; i < sls.size(); i++) {
-        if (sls[i].t != i) { ok = false; }
+        if (sls[i].t != expected_t[i]) { ok = false; }
         if (sls[i].points.size() != expected[i].size()) { ok = false; }
         for (int j = 0; j < sls[i].points.size(); j++) {
             if (sls[i].points[j].x != expected[i][j].x

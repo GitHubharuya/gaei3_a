@@ -5,7 +5,7 @@
 #include <limits>
 
 struct Slice {
-    int t;
+    double t;
     struct Point2 {
         double x, y;
     };
