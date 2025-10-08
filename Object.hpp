@@ -51,19 +51,19 @@ std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointI
 }
 
 bool Object::make_faces_from_slices() {
-    int slice_size = slices.size();
+    PointSize slice_size = slices.size();
     if (slice_size == 0) {
         return false;
     }
-    int slice_point_size = slices[0].points.size();
+    PointSize slice_point_size = slices[0].points.size();
     unsigned long sideface_num = (slice_size-1) * slice_point_size;
     faces.clear();
     faces.reserve(sideface_num * 4); // 各側面につき三角形4枚
     points.reserve(sideface_num + points.size()); // 各側面の重心を追加
-    for (int t = 1; t < slice_size; t++) {
+    for (PointSize t = 1; t < slice_size; t++) {
         PointIdx cur_offset = t * slice_point_size;
         PointIdx pre_offset = (t-1) * slice_point_size;
-        for (int i = 1; i < slice_point_size; i++) {
+        for (PointSize i = 1; i < slice_point_size; i++) {
             auto face = rect_face_with_cent({
                  cur_offset + i, cur_offset + i-1, // 今の点
                  pre_offset + i-1, pre_offset + i // 一つ前の点
@@ -97,7 +97,7 @@ bool Object::make_begin_and_end_face() {
 
     // Delaunator に渡すために { x0,  y0, x1, y1, ... } の vector に格納
     // https://github.com/delfrrr/delaunator-cpp/blob/master/examples/basic.cpp
-    for (int i = 0; i < slice_point_size; i++) {
+    for (PointSize i = 0; i < slice_point_size; i++) {
         begin_face_xy[2*i] = begin_face_p[i].x;
         begin_face_xy[2*i+1] = begin_face_p[i].y;
         end_face_xy[2*i] = end_face_p[i].x;
@@ -113,12 +113,12 @@ bool Object::make_begin_and_end_face() {
     decltype(faces) end_face;
     begin_face.reserve(d1.triangles.size()/3);
     end_face.reserve(d2.triangles.size()/3);
-    for (int i = 0; i < d1.triangles.size(); i+=3) {
+    for (PointSize i = 0; i < d1.triangles.size(); i+=3) {
         begin_face.push_back({
             d1.triangles[i], d1.triangles[i+1], d1.triangles[i+2]
         });
     }
-    for (int i = 0; i < d2.triangles.size(); i+=3) {
+    for (PointSize i = 0; i < d2.triangles.size(); i+=3) {
         end_face.push_back({
             d2.triangles[i] + end_fece_offset,
             d2.triangles[i+1] + end_fece_offset,
