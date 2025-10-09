@@ -9,11 +9,11 @@ from matplotlib.animation import FuncAnimation
 
 # ===== 定数 =====
 G = 9.8
-L1 = 1.0
-L2 = 1.0
+L1 = 10
+L2 = 10
 M1 = 2.0
 M2 = 1.0
-ball_radius = 0.2  # 円の半径
+ball_radius = 0.7  # 円の半径
 
 # ===== 運動方程式 =====
 def derivs(t, state):
@@ -45,7 +45,7 @@ y = sol.y
 # ===== 円周上の点を出力 =====
 n = 16         # 円周上の点の数
 T = 15         # 記録時間（秒）
-record_times = np.arange(0, T + 1, 1)  # 0,1,...,15
+record_times = np.arange(0, T + 1, 0.01)
 angles = np.linspace(0, 2*pi, n, endpoint=False)
 
 # 出力用リスト
@@ -70,7 +70,7 @@ for tt in record_times:
         coords += [px, py]
 
     # 出力行（t, p0x p0y ...）
-    line = f"{int(tt)}, " + " ".join(f"{v:.6f}" for v in coords)
+    line = f"{float(tt)}, " + " ".join(f"{v:.6f}" for v in coords)
     lines.append(line)
 
 # ===== テキストファイルに保存 =====
