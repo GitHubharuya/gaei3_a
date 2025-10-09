@@ -35,7 +35,7 @@ def derivs(t, state):
 
 # ===== 時間・初期条件 =====
 t_span = [0, 15]
-dt = 0.02
+dt = 0.01
 t = np.arange(t_span[0], t_span[1], dt)
 th1, w1, th2, w2 = np.radians([120.0, 0.0, -10.0, 0.0])
 state = [th1, w1, th2, w2]
@@ -45,7 +45,7 @@ y = sol.y
 # ===== 円周上の点を出力 =====
 n = 16         # 円周上の点の数
 T = 15         # 記録時間（秒）
-record_times = np.arange(0, T + 1, 0.01)
+record_times = np.arange(0, T + 1, dt)
 angles = np.linspace(0, 2*pi, n, endpoint=False)
 
 # 出力用リスト
