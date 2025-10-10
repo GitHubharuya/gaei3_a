@@ -4,6 +4,10 @@
 
 namespace Geom {
 
+struct Point2 {
+    double x, y;
+};
+
 struct Point3 {
     double x, y, z;
     double sum_sq() const {

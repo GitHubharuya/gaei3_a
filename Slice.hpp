@@ -1,15 +1,14 @@
 #pragma once
 
+#include "Geom.hpp"
+
 #include <iostream>
 #include <vector>
 #include <limits>
 
 struct Slice {
     double t;
-    struct Point2 {
-        double x, y;
-    };
-    std::vector<Slice::Point2> points;
+    std::vector<Geom::Point2> points;
     void sort_by_direction();
 };
 
@@ -27,7 +26,7 @@ std::istream& operator>>(std::istream& ist, Slice& slice) {
     double x, y;
     while (ist.peek() != '\n' && ist.peek() != EOF) {
         if (ist >> x >> y) {
-            slice.points.emplace_back(Slice::Point2{x, y});
+            slice.points.emplace_back(Geom::Point2{x, y});
         } else {
             // 点の座標の読み込みに失敗
             ist.setstate(std::ios_base::failbit);
