@@ -1,4 +1,4 @@
-#include "../Object.hpp"
+#include "../LayerObj3D.hpp"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -19,7 +19,7 @@ bool check_including_line(const std::set<std::string>& se, std::stringstream& ss
 }
 
 void test_obj_cube() {
-    Object obj;
+    LayerObj3D obj;
     std::istringstream iss;
     iss.str("0, 0 0 1 0 1 1 0 1\n"
             "1, 0 0 1 0 1 1 0 1\n");
@@ -72,7 +72,7 @@ void test_obj_cube() {
 
 // 立方体が二つつながった図形
 void test_obj_double_cube() {
-    Object obj;
+    LayerObj3D obj;
     std::istringstream iss;
     iss.str("0, 0 0 1 0 1 1 0 1\n"
             "1, 0 0 1 0 1 1 0 1\n"

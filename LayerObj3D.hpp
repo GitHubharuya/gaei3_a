@@ -12,14 +12,14 @@
 using PointIdx = unsigned long;
 using PointSize = unsigned long;
 
-struct Object {
+struct LayerObj3D {
     struct Point3 {
         double x, y, z;
     };
     double LENGTH_PER_TIME = 1;
-    Object(double lpt) : LENGTH_PER_TIME(lpt) {};
-    Object() {};
-    std::vector<Object::Point3> points;
+    LayerObj3D(double lpt) : LENGTH_PER_TIME(lpt) {};
+    LayerObj3D() {};
+    std::vector<LayerObj3D::Point3> points;
     std::vector<std::array<PointIdx, 3>> faces;
     std::vector<Slice> slices;
     bool check_slice_point_size() const ;
@@ -33,13 +33,13 @@ std::vector<std::array<PointIdx, 3>> rect_face(PointIdx a, PointIdx b, PointIdx 
     return {std::array{a, b, c}, std::array{c, d, a}};
 }
 
-std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointIdx, 4> pidxs, std::vector<Object::Point3>& points) {
+std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointIdx, 4> pidxs, std::vector<LayerObj3D::Point3>& points) {
     double centx = 0, centy = 0, centz = 0;
     for (auto i : pidxs) {
         centx += points[i].x; centy += points[i].y; centz += points[i].z;
     }
     centx /= 4; centy /= 4; centz /= 4;
-    points.emplace_back(Object::Point3{centx, centy, centz});
+    points.emplace_back(LayerObj3D::Point3{centx, centy, centz});
     PointIdx cidx = points.size() - 1;
     std::vector<std::array<PointIdx, 3>> res;
     res.reserve(4);
@@ -50,7 +50,7 @@ std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointI
     return res;
 }
 
-bool Object::make_faces_from_slices() {
+bool LayerObj3D::make_faces_from_slices() {
     PointSize slice_size = slices.size();
     if (slice_size == 0) {
         return false;
@@ -83,7 +83,7 @@ bool Object::make_faces_from_slices() {
     return true;
 }
 
-bool Object::make_begin_and_end_face() {
+bool LayerObj3D::make_begin_and_end_face() {
     PointSize slice_size = slices.size();
     if (slice_size == 0) { false; }
     PointSize slice_point_size = slices[0].points.size();
@@ -156,13 +156,13 @@ bool Object::make_begin_and_end_face() {
     return true;
 }
 
-bool Object::make_points_from_slices() {
+bool LayerObj3D::make_points_from_slices() {
     points.clear();
     points.reserve(slices.size());
     double z = 0;
     for (PointSize i = 0; i < slices.size(); i++) {
         for (const auto& p : slices[i].points) {
-            points.emplace_back(Object::Point3{
+            points.emplace_back(LayerObj3D::Point3{
                 p.x, p.y, z
             });
         }
@@ -171,7 +171,7 @@ bool Object::make_points_from_slices() {
     return true;
 }
 
-bool Object::check_slice_point_size() const {
+bool LayerObj3D::check_slice_point_size() const {
     PointSize n = slices.size();
     if (n == 0) return false;
     PointSize slice_points_size = slices[0].points.size();
@@ -181,12 +181,12 @@ bool Object::check_slice_point_size() const {
     return true;
 }
 
-bool Object::from_slices() {
+bool LayerObj3D::from_slices() {
     return make_points_from_slices() &&
         make_faces_from_slices();
 }
 
-std::istream& operator>>(std::istream& ist, Object& obj) {
+std::istream& operator>>(std::istream& ist, LayerObj3D& obj) {
     Slice slice;
     while (ist >> slice) {
         // slice.sort_by_direction();
@@ -203,7 +203,7 @@ std::istream& operator>>(std::istream& ist, Object& obj) {
     return ist;
 }
 
-std::ostream& operator<<(std::ostream& ost, const Object& obj) {
+std::ostream& operator<<(std::ostream& ost, const LayerObj3D& obj) {
     for (const auto& p : obj.points) {
         ost << "v " << p.x << " " << p.y << " " << p.z << "\n";
     }
