@@ -8,18 +8,16 @@
 
 #include "Slice.hpp"
 #include "delaunator.hpp"
+#include "Geom.hpp"
 
 using PointIdx = unsigned long;
 using PointSize = unsigned long;
 
 struct LayerObj3D {
-    struct Point3 {
-        double x, y, z;
-    };
     double LENGTH_PER_TIME = 1;
     LayerObj3D(double lpt) : LENGTH_PER_TIME(lpt) {};
     LayerObj3D() {};
-    std::vector<LayerObj3D::Point3> points;
+    std::vector<Geom::Point3> points;
     std::vector<std::array<PointIdx, 3>> faces;
     std::vector<Slice> slices;
     bool check_slice_point_size() const ;
@@ -33,13 +31,13 @@ std::vector<std::array<PointIdx, 3>> rect_face(PointIdx a, PointIdx b, PointIdx 
     return {std::array{a, b, c}, std::array{c, d, a}};
 }
 
-std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointIdx, 4> pidxs, std::vector<LayerObj3D::Point3>& points) {
+std::vector<std::array<PointIdx, 3>> rect_face_with_cent(const std::array<PointIdx, 4> pidxs, std::vector<Geom::Point3>& points) {
     double centx = 0, centy = 0, centz = 0;
     for (auto i : pidxs) {
         centx += points[i].x; centy += points[i].y; centz += points[i].z;
     }
     centx /= 4; centy /= 4; centz /= 4;
-    points.emplace_back(LayerObj3D::Point3{centx, centy, centz});
+    points.emplace_back(Geom::Point3{centx, centy, centz});
     PointIdx cidx = points.size() - 1;
     std::vector<std::array<PointIdx, 3>> res;
     res.reserve(4);
@@ -162,7 +160,7 @@ bool LayerObj3D::make_points_from_slices() {
     double z = 0;
     for (PointSize i = 0; i < slices.size(); i++) {
         for (const auto& p : slices[i].points) {
-            points.emplace_back(LayerObj3D::Point3{
+            points.emplace_back(Geom::Point3{
                 p.x, p.y, z
             });
         }
