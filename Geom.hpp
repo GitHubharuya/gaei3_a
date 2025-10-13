@@ -8,10 +8,24 @@ struct Point2 {
     double x, y;
 };
 
+// 三角形 p0 p1 p2 の2倍の符号付き面積
+double area2(const Point2& p0, const Point2& p1, const Point2& p2) {
+    return (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
+};
+
+// p0 p1 p2 が反時計回り
+bool is_ccw(const Point2& p0, const Point2& p1, const Point2& p2) {
+    return area2(p0, p1, p2) > 0;
+};
+
 struct Point3 {
     double x, y, z;
     double sum_sq() const {
         return x * x + y * y + z * z;
+    }
+    void normalize() {
+        double length = std::sqrt(sum_sq());
+        x /= length; y /= length; z /= length;
     }
 };
 
