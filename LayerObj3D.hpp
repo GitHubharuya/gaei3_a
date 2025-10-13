@@ -1,10 +1,6 @@
 #pragma once
 
-#include <array>
 #include <iostream>
-#include <vector>
-#include <cmath>
-
 #include "TraceObj3D.hpp"
 
 struct LayerObj3D : public TraceObj3D {
@@ -32,7 +28,6 @@ bool LayerObj3D::make_points() {
 std::istream& operator>>(std::istream& ist, LayerObj3D& obj) {
     Slice slice;
     while (ist >> slice) {
-        // slice.sort_by_direction();
         obj.slices.push_back(slice);
     }
 

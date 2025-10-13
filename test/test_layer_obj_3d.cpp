@@ -3,7 +3,6 @@
 #include <vector>
 #include <sstream>
 #include <set>
-#include <cmath>
 
 bool check_including_line(const std::set<std::string>& se, std::stringstream& ss) {
     std::string line;

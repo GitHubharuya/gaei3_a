@@ -6,7 +6,6 @@
 
 #include <array>
 #include <vector>
-#include <cmath>
 
 using PointIdx = unsigned long;
 using PointSize = unsigned long;
