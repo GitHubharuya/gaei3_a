@@ -25,6 +25,9 @@ struct Point3 {
     }
     void normalize() {
         double length = std::sqrt(sum_sq());
+        if (length == 0) {
+            return;
+        }
         x /= length; y /= length; z /= length;
     }
 };
@@ -35,7 +38,7 @@ double dot_prod(const Point3 a, const Point3 b) {
 
 Point3 cross_prod(const Point3 a, const Point3 b) {
     double cx = a.y * b.z - a.z * b.y;
-    double cy = -a.x * b.z + a.z * b.y;
+    double cy = -a.x * b.z + a.z * b.x;
     double cz = a.x * b.y - a.y * b.x;
     return { cx, cy, cz };
 }
