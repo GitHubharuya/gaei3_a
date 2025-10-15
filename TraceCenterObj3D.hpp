@@ -34,7 +34,7 @@ struct TraceCenterObj3D : public TraceObj3D {
     bool is_same_slice = false;
     bool make_points() override;
     void make_norm_vecs();
-    void make_points_from_norm(const Geom::Point3 n, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D);
+    Geom::Point3 make_points_from_norm(const Geom::Point3& n, const Geom::Point3& t, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D);
 };
 
 void TraceCenterObj3D::make_norm_vecs() {
@@ -50,15 +50,12 @@ void TraceCenterObj3D::make_norm_vecs() {
     }
 }
 
-void TraceCenterObj3D::make_points_from_norm(const Geom::Point3 n, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D) {
-    Geom::Point3 t_main { 0.0, 1.0, 0.0 };
-    Geom::Point3 t_sub { 0.0, 0.0, -1.0 };
+Geom::Point3 TraceCenterObj3D::make_points_from_norm(const Geom::Point3& n, const Geom::Point3& t_main, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D) {
+    Geom::Point3 t_sub { 0.0, 0.0, -1.0 }; // fix
     Geom::Point3 t, u, v;
-    double cos_theta = Geom::dot_prod(n, t);
+    double cos_theta = Geom::dot_prod(n, t_main);
     if (cos_theta > 0.99) {
         t = t_sub;
-        std::cerr << "use: sub t\n";
-        std::cerr << "a: " << a.x << " " << a.y << " " << a.z << "\n";
     } else {
         t = t_main;
     }
@@ -74,6 +71,7 @@ void TraceCenterObj3D::make_points_from_norm(const Geom::Point3 n, const Geom::P
             p.x * u.z + p.y * v.z + a.z,
         });
     }
+    return v;
 }
 
 bool TraceCenterObj3D::make_points() {
@@ -86,8 +84,10 @@ bool TraceCenterObj3D::make_points() {
         center_points[1].y - center_points[0].y,
         center_points[1].z - center_points[0].z
     };
-    make_points_from_norm(
+    Geom::Point3 t { 0.0, 1.0, 0.0 };
+    t = make_points_from_norm(
         first_n,
+        t,
         center_points[0],
         slices[0].points
     );
@@ -95,8 +95,9 @@ bool TraceCenterObj3D::make_points() {
     make_norm_vecs();
     for (PointSize i = 0; i < norm_vecs.size(); i++) {
         PointIdx si = is_same_slice ? 0 : i+1;
-        make_points_from_norm(
+        t = make_points_from_norm(
             norm_vecs[i],
+            t,
             center_points[i + 1],
             slices[si].points
         );
@@ -109,6 +110,7 @@ bool TraceCenterObj3D::make_points() {
     };
     make_points_from_norm(
         last_n,
+        t,
         center_points.back(),
         slices.back().points
     );
