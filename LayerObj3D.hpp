@@ -30,7 +30,7 @@ bool LayerObj3D::make_points() {
 
 bool LayerObj3D::check_slice_point_size() const {
     for (const auto& slice : slices) {
-        if (slice.points.size() != slice_points_size) return false;
+        if (slice.points.size() != point_size_per_step) return false;
     }
     return true;
 }
@@ -46,12 +46,12 @@ std::istream& operator>>(std::istream& ist, LayerObj3D& obj) {
     }
 
     bool is_ok = true;
-    obj.slice_size = obj.slices.size();
-    if (obj.slice_size == 0) {
+    obj.step_size = obj.slices.size();
+    if (obj.step_size == 0) {
         is_ok = false;
         std::cerr << "slice size is 0\n";
     } else {
-        obj.slice_points_size = obj.slices[0].points.size();
+        obj.point_size_per_step = obj.slices[0].points.size();
         obj.first_slice = obj.slices[0];
         obj.last_slice = obj.slices.back();
     }

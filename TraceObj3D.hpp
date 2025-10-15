@@ -13,8 +13,8 @@ using PointSize = unsigned long;
 struct TraceObj3D {
 
     // 入力
-    PointSize slice_size;
-    PointSize slice_points_size;
+    PointSize step_size;
+    PointSize point_size_per_step;
     Slice first_slice;
     Slice last_slice;
 
@@ -30,10 +30,10 @@ struct TraceObj3D {
 };
 
 bool TraceObj3D::make_side_faces() {
-    if (slice_size == 0) {
+    if (step_size == 0) {
         return false;
     }
-    unsigned long sideface_num = (slice_size-1) * slice_points_size;
+    unsigned long sideface_num = (step_size-1) * point_size_per_step;
     faces.reserve(faces.size() + sideface_num * 4); // 各側面につき三角形4枚
     
     // 四角形を三角形2つにする
@@ -44,10 +44,10 @@ bool TraceObj3D::make_side_faces() {
         };
     };
 
-    for (PointSize t = 1; t < slice_size; t++) {
-        PointIdx cur_offset = t * slice_points_size;
-        PointIdx pre_offset = (t-1) * slice_points_size;
-        for (PointSize i = 1; i < slice_points_size; i++) {
+    for (PointSize t = 1; t < step_size; t++) {
+        PointIdx cur_offset = t * point_size_per_step;
+        PointIdx pre_offset = (t-1) * point_size_per_step;
+        for (PointSize i = 1; i < point_size_per_step; i++) {
             auto face = rect_face({
                  cur_offset + i, cur_offset + i-1, // 今の点
                  pre_offset + i-1, pre_offset + i // 一つ前の点
@@ -55,8 +55,8 @@ bool TraceObj3D::make_side_faces() {
             faces.insert(faces.end(), face.begin(), face.end());
         }
         auto face = rect_face({
-             cur_offset + 0, cur_offset + slice_points_size-1, // 今の点
-             pre_offset + slice_points_size-1, pre_offset + 0 // 一つ前の点
+             cur_offset + 0, cur_offset + point_size_per_step-1, // 今の点
+             pre_offset + point_size_per_step-1, pre_offset + 0 // 一つ前の点
         });
         faces.insert(faces.end(), face.begin(), face.end());
     }
@@ -64,15 +64,15 @@ bool TraceObj3D::make_side_faces() {
 }
 
 bool TraceObj3D::make_top_bottom_face() {
-    if (slice_size == 0) { false; }
+    if (step_size == 0) { false; }
 
     // 三角形分割
-    std::vector<double> begin_face_xy(slice_points_size * 2);
-    std::vector<double> end_face_xy(slice_points_size * 2);
+    std::vector<double> begin_face_xy(point_size_per_step * 2);
+    std::vector<double> end_face_xy(point_size_per_step * 2);
 
     // Delaunator に渡すために { x0,  y0, x1, y1, ... } の vector に格納
     // https://github.com/delfrrr/delaunator-cpp/blob/master/examples/basic.cpp
-    for (PointSize i = 0; i < slice_points_size; i++) {
+    for (PointSize i = 0; i < point_size_per_step; i++) {
         begin_face_xy[2*i] = first_slice.points[i].x;
         begin_face_xy[2*i+1] = first_slice.points[i].y;
         end_face_xy[2*i] = last_slice.points[i].x;
@@ -80,7 +80,7 @@ bool TraceObj3D::make_top_bottom_face() {
     }
     delaunator::Delaunator d1(begin_face_xy);
     delaunator::Delaunator d2(end_face_xy);
-    PointIdx end_fece_offset = (slice_size - 1) * slice_points_size;
+    PointIdx end_fece_offset = (step_size - 1) * point_size_per_step;
     decltype(faces) begin_face;
     decltype(faces) end_face;
     begin_face.reserve(d1.triangles.size()/3);
