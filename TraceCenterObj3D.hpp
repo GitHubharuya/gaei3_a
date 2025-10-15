@@ -9,7 +9,9 @@ struct TraceCenterObj3D : public TraceObj3D {
         const std::vector<Slice>& _slices, // WARGING: will move
         double _length_per_time = 1,
         bool _is_same_slice = false
-    ) : is_same_slice(_is_same_slice), LENGTH_PER_TIME(_length_per_time) {
+    ) {
+        is_same_slice = _is_same_slice;
+        LENGTH_PER_TIME = _length_per_time;
         if (!_is_same_slice && _slices.size() < 3) {
             std::cerr << "slice is not enough\n";
             std::exit(1);
@@ -49,17 +51,19 @@ void TraceCenterObj3D::make_norm_vecs() {
 }
 
 void TraceCenterObj3D::make_points_from_norm(const Geom::Point3 n, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D) {
-    Geom::Point3 t { 0.0, 1.0, 0.0 };
-    Geom::Point3 t_sub { 0.0, 0.0, 1.0 };
-    Geom::Point3 u, v;
+    Geom::Point3 t_main { 0.0, 1.0, 0.0 };
+    Geom::Point3 t_sub { 0.0, 0.0, -1.0 };
+    Geom::Point3 t, u, v;
     double cos_theta = Geom::dot_prod(n, t);
     if (cos_theta > 0.99) {
-        u = Geom::cross_prod(t_sub, n);
-        u.normalize();
+        t = t_sub;
+        std::cerr << "use: sub t\n";
+        std::cerr << "a: " << a.x << " " << a.y << " " << a.z << "\n";
     } else {
-        u = Geom::cross_prod(t, n);
-        u.normalize();
+        t = t_main;
     }
+    u = Geom::cross_prod(t, n);
+    u.normalize();
     v = Geom::cross_prod(n, u);
     v.normalize();
     points.reserve(points2D.size());
@@ -77,8 +81,13 @@ bool TraceCenterObj3D::make_points() {
     if (slice_size == 0) { return false; }
     PointSize slice_point_size = slices[0].points.size();
 
+    Geom::Point3 first_n {
+        center_points[1].x - center_points[0].x,
+        center_points[1].y - center_points[0].y,
+        center_points[1].z - center_points[0].z
+    };
     make_points_from_norm(
-        Geom::Point3{0, 0, 1}, 
+        first_n,
         center_points[0],
         slices[0].points
     );
@@ -93,8 +102,13 @@ bool TraceCenterObj3D::make_points() {
         );
     }
 
+    Geom::Point3 last_n {
+        center_points.back().x - center_points[center_points.size() - 2].x,
+        center_points.back().y - center_points[center_points.size() - 2].y,
+        center_points.back().z - center_points[center_points.size() - 2].z
+    };
     make_points_from_norm(
-        Geom::Point3{0, 0, 1}, 
+        last_n,
         center_points.back(),
         slices.back().points
     );
