@@ -1,4 +1,4 @@
-#include "Object.hpp"
+#include "LayerObj3D.hpp"
 #include <iostream>
 
 int main(int argc, char** argv) {
@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
     if (argc >= 2) {
         length_par_time = std::stof(argv[1]);
     }
-    Object obj(length_par_time);
+    LayerObj3D obj(length_par_time);
     std::cin >> obj;
     std::cout << obj;
 }
