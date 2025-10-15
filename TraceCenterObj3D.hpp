@@ -21,7 +21,19 @@ struct TraceCenterObj3D : public TraceObj3D {
             std::cerr << "slice is not enough\n";
             std::exit(1);
         }
-        this->slices = std::move(_slices);
+        if (_is_same_slice && _slices.size() != 1) {
+            std::cerr << "single slice with is_same_slice flag\n";
+            std::exit(1);
+        }
+
+        slices = std::move(_slices);
+
+        // これらは親クラスの変数
+        step_size = xs.size();
+        point_size_per_step = slices[0].points.size();
+        first_slice = slices[0];
+        last_slice = slices.back();
+
         center_points.clear();
         center_points.reserve(xs.size());
         double z = 0.0;
@@ -30,10 +42,14 @@ struct TraceCenterObj3D : public TraceObj3D {
             z += length_per_time;
         }
 
-        from_slices();
+        if (!from_slices()) {
+            std::cerr << "Error: in TraceCenterObj3D constuctor\n";
+            std::exit(1);
+        }
     };
 
     double TOTAL_LENGTH = 100;
+    std::vector<Slice> slices;
     std::vector<Geom::Point3> center_points;
     std::vector<Geom::Point3> norm_vecs;
     bool is_same_slice = false;
