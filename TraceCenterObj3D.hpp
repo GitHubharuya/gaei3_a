@@ -7,11 +7,16 @@ struct TraceCenterObj3D : public TraceObj3D {
         const std::vector<double>& xs,
         const std::vector<double>& ys,
         const std::vector<Slice>& _slices, // WARGING: will move
-        double _length_per_time = 1,
+        double _total_length = 100,
         bool _is_same_slice = false
     ) {
+        if (xs.size() != ys.size()) {
+            std::cerr << "TraceCenterObj3D: not same size points\n";
+            std::exit(1);
+        }
         is_same_slice = _is_same_slice;
-        LENGTH_PER_TIME = _length_per_time;
+        TOTAL_LENGTH = _total_length;
+        double length_per_time = TOTAL_LENGTH / xs.size();
         if (!_is_same_slice && _slices.size() < 3) {
             std::cerr << "slice is not enough\n";
             std::exit(1);
@@ -22,13 +27,13 @@ struct TraceCenterObj3D : public TraceObj3D {
         double z = 0.0;
         for (PointSize i = 0; i < xs.size(); i++) {
             center_points.emplace_back(Geom::Point3{ xs[i], ys[i], z });
-            z += LENGTH_PER_TIME;
+            z += length_per_time;
         }
 
         from_slices();
     };
 
-    double LENGTH_PER_TIME = 1;
+    double TOTAL_LENGTH = 100;
     std::vector<Geom::Point3> center_points;
     std::vector<Geom::Point3> norm_vecs;
     bool is_same_slice = false;
