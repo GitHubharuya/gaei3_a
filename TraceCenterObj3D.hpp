@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Geom.hpp"
 #include "TraceObj3D.hpp"
 
@@ -56,6 +58,8 @@ struct TraceCenterObj3D : public TraceObj3D {
     bool make_points() override;
     void make_norm_vecs();
     Geom::Point3 make_points_from_norm(const Geom::Point3& n, const Geom::Point3& t, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D);
+    bool check_intersect() const;
+    bool is_front_points(const Geom::Point3& n, const Geom::Point3& o, PointIdx start, PointIdx end) const;
 };
 
 void TraceCenterObj3D::make_norm_vecs() {
@@ -136,5 +140,50 @@ bool TraceCenterObj3D::make_points() {
         slices.back().points
     );
 
+    if (!check_intersect()) {
+        std::cerr << "交差を検出\n";
+        return false;
+    }
+
+    return true;
+}
+
+bool TraceCenterObj3D::is_front_points(const Geom::Point3& n, const Geom::Point3& o, PointIdx start, PointIdx end) const {
+    for (PointIdx i = start; i < end; i++) {
+        double dot = Geom::dot_prod(n,
+            Geom::Point3{
+                points[i].x - o.x,
+                points[i].y - o.y,
+                points[i].z - o.z,
+            }
+        );
+        if (dot <= 0) { return false; }
+    }
+    return true;
+}
+
+bool TraceCenterObj3D::check_intersect() const {
+    for (PointSize i = 0; i < norm_vecs.size(); i++) {
+        PointIdx start = point_size_per_step * i;
+        PointIdx end = point_size_per_step * (i + 1);
+        if (!is_front_points(
+            Geom::Point3{
+                - norm_vecs[i].x, - norm_vecs[i].y, - norm_vecs[i].z
+            },
+            center_points[i + 1], // 最初の点を除く
+            start, end)
+        ) {
+            return false;
+        }
+        start = point_size_per_step * (i + 2);
+        end = point_size_per_step * (i + 3);
+        if (!is_front_points(
+            norm_vecs[i],
+            center_points[i + 1], // 最初の点を除く
+            start, end)
+        ) {
+            return false;
+        }
+    }
     return true;
 }
