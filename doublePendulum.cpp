@@ -7,6 +7,7 @@
 #include <sstream>
 #include <algorithm>
 #include <numeric>
+#include "TraceCurveObj3D.hpp"
 using namespace std;
 using ll = long long;
 using ld = long double;
@@ -126,6 +127,9 @@ int main() {
         return 1;
     }
 
+    vector<double> xs,ys;
+
+
     for (ld tt = 0; tt <= T_record; tt += 0.01) {
         auto it = min_element(t_history.begin(), t_history.end(), 
             [tt](ld a, ld b) { return abs(a - tt) < abs(b - tt); });
@@ -139,11 +143,13 @@ int main() {
         ld x2_center = L2 * sin(current_th2) + x1;
         ld y2_center = -L2 * cos(current_th2) + y1;
 
-        stringstream ss;
-        ss << fixed << setprecision(6);
+        xs.push_back(x2_center), ys.push_back(y2_center);
+
+        //stringstream ss;
+        //ss << fixed << setprecision(6);
 
         // 先端の座標出力
-        ss << x2_center << " " << y2_center << " ";
+        //ss << x2_center << " " << y2_center << " ";
 
         // z軸垂直の円周上の座標出力
         /*for(ld a : angles) {
@@ -152,12 +158,16 @@ int main() {
             ss << px << " " << py << " ";
         }*/
 
-        string coords_str = ss.str();
-        coords_str.pop_back();
-        outfile << fixed << setprecision(2) << tt << ", " << coords_str << endl;
+        //string coords_str = ss.str();
+        //coords_str.pop_back();
+        //outfile << fixed << setprecision(2) << tt << ", " << coords_str << endl;
     }
 
-    cout << "✅ 'circle_points.txt' に円周上の点座標を出力しました。" << endl;
+    double total_length = 130;
+    TraceCurveObj3D obj{xs, ys, total_length};
+    cout << obj;
+
+    //cout << "✅ 'circle_points.txt' に円周上の点座標を出力しました。" << endl;
 
     return 0;
 }
