@@ -100,9 +100,6 @@ Geom::Point3 TraceCenterObj3D::make_points_from_norm(const Geom::Point3& n, cons
 }
 
 bool TraceCenterObj3D::make_points() {
-    PointSize slice_size = slices.size();
-    if (slice_size == 0) { return false; }
-    PointSize slice_point_size = slices[0].points.size();
 
     Geom::Point3 first_n {
         center_points[1].x - center_points[0].x,
