@@ -160,23 +160,20 @@ bool TraceCenterObj3D::is_front_points(const Geom::Point3& n, const Geom::Point3
 }
 
 bool TraceCenterObj3D::check_intersect() const {
+    // 最初の面をチェック
+    if (!is_front_points(
+        Geom::Point3{ -norm_vecs[0].x, -norm_vecs[0].y, -norm_vecs[0].z },
+        center_points[0],
+        0, point_size_per_step
+    )) {
+        return false;
+    }
     for (PointSize i = 0; i < norm_vecs.size(); i++) {
-        PointIdx start = point_size_per_step * i;
-        PointIdx end = point_size_per_step * (i + 1);
-        if (!is_front_points(
-            Geom::Point3{
-                - norm_vecs[i].x, - norm_vecs[i].y, - norm_vecs[i].z
-            },
-            center_points[i + 1], // 最初の点を除く
-            start, end)
-        ) {
-            return false;
-        }
-        start = point_size_per_step * (i + 2);
-        end = point_size_per_step * (i + 3);
+        PointIdx start = point_size_per_step * (i + 2);
+        PointIdx end = point_size_per_step * (i + 3);
         if (!is_front_points(
             norm_vecs[i],
-            center_points[i + 1], // 最初の点を除く
+            center_points[i + 1], // 最初の面を除く
             start, end)
         ) {
             return false;
