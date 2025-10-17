@@ -64,7 +64,7 @@ bool TraceObj3D::make_side_faces() {
 }
 
 bool TraceObj3D::make_top_bottom_face() {
-    if (step_size == 0) { false; }
+    if (step_size == 0) { return false; }
 
     // 三角形分割
     std::vector<double> begin_face_xy(point_size_per_step * 2);
@@ -87,14 +87,16 @@ bool TraceObj3D::make_top_bottom_face() {
     end_face.reserve(d2.triangles.size()/3);
     for (PointSize i = 0; i < d1.triangles.size(); i+=3) {
         begin_face.push_back({
-            d1.triangles[i], d1.triangles[i+1], d1.triangles[i+2]
+            static_cast<unsigned long>(d1.triangles[i]),
+            static_cast<unsigned long>(d1.triangles[i+1]),
+            static_cast<unsigned long>(d1.triangles[i+2])
         });
     }
     for (PointSize i = 0; i < d2.triangles.size(); i+=3) {
         end_face.push_back({
-            d2.triangles[i] + end_fece_offset,
-            d2.triangles[i+1] + end_fece_offset,
-            d2.triangles[i+2] + end_fece_offset
+            static_cast<unsigned long>(d2.triangles[i] + end_fece_offset),
+            static_cast<unsigned long>(d2.triangles[i+1] + end_fece_offset),
+            static_cast<unsigned long>(d2.triangles[i+2] + end_fece_offset)
         });
     }
 
