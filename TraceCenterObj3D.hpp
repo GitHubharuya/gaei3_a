@@ -146,7 +146,7 @@ bool TraceCenterObj3D::make_points() {
     if (!check_intersect(intercect_step_info)) {
         std::cerr << count_make_point_call << "回目: " << intercect_step_info.size() << " ステップの交差を検出\n";
         double offset = 0.0;
-        double eps = 1e-3;
+        double eps = 1e-4;
         PointIdx isi = 0;
         for (PointIdx i = intercect_step_info[isi]; i < center_points.size(); i++) {
             if (isi < intercect_step_info.size() && i == intercect_step_info[isi]) {
