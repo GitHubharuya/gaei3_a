@@ -106,7 +106,13 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
     faces.reserve(obj_face_size);
     for (const auto& obj : objs) {
         for (const auto& face : obj->faces) {
-            // TODO: remove bottom faces
+            if (
+                face[0] >= 0 && face[0] < obj->point_size_per_step
+                && face[1] >= 0 && face[1] < obj->point_size_per_step
+                && face[2] >= 0 && face[2] < obj->point_size_per_step
+            ) {
+                continue;
+            }
             faces.emplace_back(std::array<PointIdx, 3>{
                 face[0] + offset,
                 face[1] + offset,
