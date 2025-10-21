@@ -8,23 +8,26 @@ struct MultiObj3D : TraceObj3D {
         points.clear(); faces.clear();
         PointSize obj_point_size = add_obj_points();
 
-        add_stand(obj_point_size);
+        add_stand(obj_point_size, 0);
         add_shifted_face(0);
         // attach_stand_objs();
 
         // 親クラスの初期化
     }
+
     std::vector<TraceObj3D*> objs;
+    PointIdx stand_point_idx_begin = 0;
+    PointSize stand_point_size = 0;
 
     bool make_points() override { return false; } // スタンドの追加は点と面を同一の場所で追加すべきなので make_points は定義しない
 
     PointSize add_obj_points();
-    PointSize add_stand(PointSize offset);
+    PointSize add_stand(PointSize offset, double stand_z);
     void add_shifted_face(PointSize offset);
     void attach_stand_objs();
 };
 
-PointSize MultiObj3D::add_stand(PointSize offset) {
+PointSize MultiObj3D::add_stand(PointSize offset, double stand_z) {
     double max_x = objs[0]->points[0].x;
     double min_x = objs[0]->points[0].x;
     double max_y = objs[0]->points[0].y;
@@ -46,29 +49,30 @@ PointSize MultiObj3D::add_stand(PointSize offset) {
     double top = max_y + ymargin;
     double stand_height = 10;
 
+    stand_point_idx_begin = points.size();
     points.emplace_back(Geom::Point3{
-        left, bottom, 0
+        left, bottom, stand_z
     });
     points.emplace_back(Geom::Point3{
-        right, bottom, 0
+        right, bottom, stand_z
     });
     points.emplace_back(Geom::Point3{
-        right, top, 0
+        right, top, stand_z
     });
     points.emplace_back(Geom::Point3{
-        left, top, 0
+        left, top, stand_z
     });
     points.emplace_back(Geom::Point3{
-        left, bottom, -stand_height
+        left, bottom, stand_z - stand_height
     });
     points.emplace_back(Geom::Point3{
-        right, bottom, -stand_height
+        right, bottom, stand_z - stand_height
     });
     points.emplace_back(Geom::Point3{
-        right, top, -stand_height
+        right, top, stand_z - stand_height
     });
     points.emplace_back(Geom::Point3{
-        left, top, -stand_height
+        left, top, stand_z - stand_height
     });
 
     // 四角形を三角形2つにする
@@ -83,6 +87,7 @@ PointSize MultiObj3D::add_stand(PointSize offset) {
     insert_rect_face({ offset + 3, offset + 7, offset + 4, offset + 0, });
     insert_rect_face({ offset + 7, offset + 6, offset + 5, offset + 4, });
 
+    stand_point_size = 8;
     return 8; // stand point size
 }
 
