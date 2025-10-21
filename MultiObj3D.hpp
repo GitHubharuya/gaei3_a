@@ -1,16 +1,19 @@
 #pragma once
 #include "TraceObj3D.hpp"
+#include <tuple>
 
 struct MultiObj3D : TraceObj3D {
     MultiObj3D(const std::vector<TraceObj3D*>& _objs) {
         if (_objs.size() == 0) return;
         objs = _objs;
         points.clear(); faces.clear();
-        PointSize obj_point_size = add_obj_points();
+        PointSize stand_point_offset = add_obj_points();
 
-        add_stand(obj_point_size, 0);
+        std::tuple<double, PointSize> attach_info = attach_stand_objs();
+        stand_point_offset += std::get<PointSize>(attach_info);
+        add_stand(stand_point_offset, std::get<double>(attach_info));
+
         add_shifted_face(0);
-        // attach_stand_objs();
 
         // 親クラスの初期化
     }
@@ -24,7 +27,7 @@ struct MultiObj3D : TraceObj3D {
     PointSize add_obj_points();
     PointSize add_stand(PointSize offset, double stand_z);
     void add_shifted_face(PointSize offset);
-    void attach_stand_objs();
+    std::tuple<double, PointSize> attach_stand_objs();
 };
 
 PointSize MultiObj3D::add_stand(PointSize offset, double stand_z) {
@@ -128,5 +131,7 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
     }
 }
 
-void MultiObj3D::attach_stand_objs() {
+// @return: stand z coordinate
+std::tuple<double, PointSize> MultiObj3D::attach_stand_objs() {
+    return { 0, 0 };
 }
