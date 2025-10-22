@@ -25,8 +25,8 @@ struct TraceObj3D {
     bool make_side_faces();
     bool make_top_bottom_face();
     virtual bool make_points() = 0; // 仮想関数
-    bool from_slices();
-    bool make_faces_from_slices();
+    virtual bool from_slices();
+    virtual bool make_faces_from_slices();
 };
 
 bool TraceObj3D::make_side_faces() {

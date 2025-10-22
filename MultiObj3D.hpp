@@ -22,7 +22,10 @@ struct MultiObj3D : TraceObj3D {
     PointIdx stand_point_idx_begin = 0;
     PointSize stand_point_size = 0;
 
-    bool make_points() override { return false; } // スタンドの追加は点と面を同一の場所で追加すべきなので make_points は定義しない
+    // スタンドの追加は点と面を同一の場所で追加すべきなので定義しない
+    bool make_points() override { return false; }
+    bool make_faces_from_slices() override { return false; }
+    bool from_slices() override { return false; }
 
     PointSize add_obj_points();
     PointSize add_stand(PointSize offset, double stand_z);
