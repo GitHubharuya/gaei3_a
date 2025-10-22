@@ -7,13 +7,11 @@ struct MultiObj3D : TraceObj3D {
         if (_objs.size() == 0) return;
         objs = _objs;
         points.clear(); faces.clear();
-        PointSize stand_point_offset = add_obj_points();
-
-        std::tuple<double, PointSize> attach_info = attach_stand_objs();
-        stand_point_offset += std::get<PointSize>(attach_info);
-        add_stand(stand_point_offset, std::get<double>(attach_info));
+        double stand_z = attach_stand_objs();
+        add_obj_points();
 
         add_shifted_face(0);
+        add_stand(stand_z);
 
         // 親クラスの初期化
     }
@@ -28,12 +26,12 @@ struct MultiObj3D : TraceObj3D {
     bool from_slices() override { return false; }
 
     PointSize add_obj_points();
-    PointSize add_stand(PointSize offset, double stand_z);
+    PointSize add_stand(double stand_z);
     void add_shifted_face(PointSize offset);
-    std::tuple<double, PointSize> attach_stand_objs();
+    double attach_stand_objs();
 };
 
-PointSize MultiObj3D::add_stand(PointSize offset, double stand_z) {
+PointSize MultiObj3D::add_stand(double stand_z) {
     double max_x = objs[0]->points[0].x;
     double min_x = objs[0]->points[0].x;
     double max_y = objs[0]->points[0].y;
@@ -87,6 +85,7 @@ PointSize MultiObj3D::add_stand(PointSize offset, double stand_z) {
         faces.emplace_back(std::array<PointIdx, 3>{idxs[2], idxs[3], idxs[0]});
     };
 
+    PointIdx offset = stand_point_idx_begin;
     insert_rect_face({ offset + 0, offset + 4, offset + 5, offset + 1, });
     insert_rect_face({ offset + 1, offset + 5, offset + 6, offset + 2, });
     insert_rect_face({ offset + 2, offset + 6, offset + 7, offset + 3, });
@@ -135,6 +134,16 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
 }
 
 // @return: stand z coordinate
-std::tuple<double, PointSize> MultiObj3D::attach_stand_objs() {
-    return { 0, 0 };
+double MultiObj3D::attach_stand_objs() {
+    int turn_step = 16;
+    double min_z = 0;
+    for (auto& obj : objs) {
+        if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(obj)) {
+            min_z = std::min(min_z, curve_obj->bend_first_edge(turn_step));
+        }
+    }
+
+    // そろえる
+
+    return min_z; // @return: stand z coordinate
 }
