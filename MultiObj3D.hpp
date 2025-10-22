@@ -137,13 +137,29 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
 double MultiObj3D::attach_stand_objs() {
     int turn_step = 16;
     double min_z = 0;
-    for (auto& obj : objs) {
-        if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(obj)) {
-            min_z = std::min(min_z, curve_obj->bend_first_edge(turn_step));
+    PointIdx min_z_idx = 0;
+    for (PointIdx i = 0; i < objs.size(); i++) {
+        if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(objs[i])) {
+            double tmp = curve_obj->bend_first_edge(turn_step);
+            if (tmp < min_z) {
+                min_z = tmp;
+                min_z_idx = i;
+            }
         }
     }
 
     // そろえる
+    for (PointIdx i = 0; i < objs.size(); i++) {
+        if (i == min_z_idx) continue;
+        auto obj = objs[i];
+        PointSize psize = obj->point_size_per_step;
+        std::vector<Geom::Point3> add_ps(psize);
+        for (PointIdx j = 0; j < psize; j++) {
+            add_ps[j] = obj->points[obj->front_face_idx * psize + j];
+            add_ps[j].z = min_z;
+        }
+        objs[i]->push_front_step(add_ps);
+    }
 
     return min_z; // @return: stand z coordinate
 }
