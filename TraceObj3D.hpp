@@ -28,8 +28,9 @@ struct TraceObj3D {
     virtual bool from_slices();
     virtual bool make_faces_from_slices();
 
-    vod push_front_step(const std::vector<Geom::Point3>& add_points);
+    void push_front_step(const std::vector<Geom::Point3>& add_points);
     void add_faces(PointIdx s1, PointIdx s2);
+    PointIdx front_face_idx = 0;
 };
 
 bool TraceObj3D::make_side_faces() {
@@ -139,14 +140,15 @@ void TraceObj3D::add_faces(PointIdx s1, PointIdx s2) {
     }
 }
 
-vod TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
+void TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
     if (add_points.size() != point_size_per_step) {
         std::cerr << "attempt to push front diffrent size points\n";
         std::exit(1);
     }
 
-    points.insert(points.begin(), add_points.begin(), add_points.end());
-    add_faces(step_size, 0);
+    points.insert(points.end(), add_points.begin(), add_points.end());
+    add_faces(step_size, front_face_idx);
+    front_face_idx = step_size;
     step_size++;
 }
 
