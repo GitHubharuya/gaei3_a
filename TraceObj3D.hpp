@@ -27,6 +27,9 @@ struct TraceObj3D {
     virtual bool make_points() = 0; // 仮想関数
     virtual bool from_slices();
     virtual bool make_faces_from_slices();
+
+    vod push_front_step(const std::vector<Geom::Point3>& add_points);
+    void add_faces(PointIdx s1, PointIdx s2);
 };
 
 bool TraceObj3D::make_side_faces() {
@@ -34,31 +37,10 @@ bool TraceObj3D::make_side_faces() {
         return false;
     }
     unsigned long sideface_num = (step_size-1) * point_size_per_step;
-    faces.reserve(faces.size() + sideface_num * 4); // 各側面につき三角形4枚
+    faces.reserve(faces.size() + sideface_num * 2); // 各側面につき三角形2枚
     
-    // 四角形を三角形2つにする
-    auto rect_face = [&](std::array<PointIdx, 4> idxs) -> std::vector<std::array<PointIdx, 3>> {
-        return {
-            {idxs[0], idxs[1], idxs[2]},
-            {idxs[2], idxs[3], idxs[0]}
-        };
-    };
-
-    for (PointSize t = 1; t < step_size; t++) {
-        PointIdx cur_offset = t * point_size_per_step;
-        PointIdx pre_offset = (t-1) * point_size_per_step;
-        for (PointSize i = 1; i < point_size_per_step; i++) {
-            auto face = rect_face({
-                 cur_offset + i, cur_offset + i-1, // 今の点
-                 pre_offset + i-1, pre_offset + i // 一つ前の点
-            });
-            faces.insert(faces.end(), face.begin(), face.end());
-        }
-        auto face = rect_face({
-             cur_offset + 0, cur_offset + point_size_per_step-1, // 今の点
-             pre_offset + point_size_per_step-1, pre_offset + 0 // 一つ前の点
-        });
-        faces.insert(faces.end(), face.begin(), face.end());
+    for (PointSize t = 0; t < step_size - 1; t++) {
+        add_faces(t, t + 1);
     }
     return true;
 }
@@ -132,6 +114,40 @@ bool TraceObj3D::make_faces_from_slices() {
 bool TraceObj3D::from_slices() {
     return make_points() &&
         make_faces_from_slices();
+}
+
+// s1 より s2 が z座標が大きい
+void TraceObj3D::add_faces(PointIdx s1, PointIdx s2) {
+    // 四角形を三角形2つにする
+    auto rect_face = [&](std::array<PointIdx, 4> idxs) -> std::vector<std::array<PointIdx, 3>> {
+        return {
+            {idxs[0], idxs[1], idxs[2]},
+            {idxs[2], idxs[3], idxs[0]}
+        };
+    };
+
+    PointIdx s1_p_idx = s1 * point_size_per_step;
+    PointIdx s2_p_idx = s2 * point_size_per_step;
+    for (PointIdx i = 0; i < point_size_per_step; i++) {
+        PointIdx next = (i + 1) % point_size_per_step;
+        // auto face = rect_face({s1_p_idx + i, s2_p_idx + i, s2_p_idx + next, s1_p_idx + next});
+        auto face = rect_face({
+            s1_p_idx + i, s1_p_idx + next,
+            s2_p_idx + next, s2_p_idx + i
+        });
+        faces.insert(faces.end(), face.begin(), face.end());
+    }
+}
+
+vod TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
+    if (add_points.size() != point_size_per_step) {
+        std::cerr << "attempt to push front diffrent size points\n";
+        std::exit(1);
+    }
+
+    points.insert(points.begin(), add_points.begin(), add_points.end());
+    add_faces(step_size, 0);
+    step_size++;
 }
 
 std::ostream& operator<<(std::ostream& ost, const TraceObj3D& obj) {
