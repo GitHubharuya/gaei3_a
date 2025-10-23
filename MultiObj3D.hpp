@@ -1,6 +1,8 @@
 #pragma once
 #include "TraceObj3D.hpp"
+#include "delaunator.hpp"
 #include <tuple>
+#include <limits>
 
 struct MultiObj3D : TraceObj3D {
     MultiObj3D(const std::vector<TraceObj3D*>& _objs) {
@@ -29,6 +31,8 @@ struct MultiObj3D : TraceObj3D {
     PointSize add_stand(double stand_z);
     void add_shifted_face(PointSize offset);
     double attach_stand_objs();
+    std::vector<PointSize> objs_point_offset;
+    std::vector<PointSize> first_point_face_offset;
 };
 
 PointSize MultiObj3D::add_stand(double stand_z) {
@@ -102,8 +106,10 @@ PointSize MultiObj3D::add_obj_points() {
         obj_point_size_all += obj->points.size();
     }
     points.reserve(obj_point_size_all);
-    for (const auto& obj : objs) {
-        points.insert(points.end(), obj->points.begin(), obj->points.end());
+    objs_point_offset.resize(objs.size());
+    for (PointIdx i = 0; i < objs.size(); i++) {
+        objs_point_offset[i] = points.size();
+        points.insert(points.end(), objs[i]->points.begin(), objs[i]->points.end());
     }
     return obj_point_size_all;
 }
@@ -135,31 +141,53 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
 
 // @return: stand z coordinate
 double MultiObj3D::attach_stand_objs() {
+    first_point_face_offset.clear();
+    first_point_face_offset.resize(objs.size(), 0);
+
     int turn_step = 16;
-    double min_z = 0;
-    PointIdx min_z_idx = 0;
     for (PointIdx i = 0; i < objs.size(); i++) {
         if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(objs[i])) {
-            double tmp = curve_obj->bend_first_edge(turn_step);
-            if (tmp < min_z) {
-                min_z = tmp;
-                min_z_idx = i;
+            PointIdx added_offset = curve_obj->bend_first_edge(turn_step);
+            if (added_offset != 0) {
+                first_point_face_offset[i] = added_offset;
             }
         }
+    }
+
+    double min_z = std::numeric_limits<double>::max();
+    PointIdx min_z_idx = 0;
+
+    bool first_point_found = false;
+    for (PointIdx i = 0; i < objs.size(); i++) {
+        auto& obj = objs[i];
+        PointIdx offset = first_point_face_offset[i];
+        for (PointIdx j = 0; j < obj->point_size_per_step; j++) {
+            double current_z = obj->points[offset + j].z;
+            if (!first_point_found || current_z < min_z) {
+                min_z = current_z;
+                min_z_idx = i;
+                first_point_found = true;
+            }
+        }
+    }
+    if (!first_point_found) {
+        min_z = 0;
+        min_z_idx = 0;
     }
 
     // そろえる
     for (PointIdx i = 0; i < objs.size(); i++) {
         if (i == min_z_idx) continue;
+
         auto obj = objs[i];
         PointSize psize = obj->point_size_per_step;
         std::vector<Geom::Point3> add_ps(psize);
         for (PointIdx j = 0; j < psize; j++) {
-            add_ps[j] = obj->points[obj->front_face_idx * psize + j];
+            add_ps[j] = obj->points[first_point_face_offset[i] + j];
             add_ps[j].z = min_z;
         }
-        objs[i]->push_front_step(add_ps);
+        first_point_face_offset[i] = objs[i]->push_front_step(add_ps);
     }
 
-    return min_z; // @return: stand z coordinate
+    return min_z;
 }

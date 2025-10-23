@@ -61,12 +61,14 @@ struct TraceCenterObj3D : public TraceObj3D {
     Geom::Point3 make_points_from_norm(const Geom::Point3& n, const Geom::Point3& t, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D);
     bool check_intersect(std::vector<PointIdx>& intercect_step_info) const;
     bool is_front_points(const Geom::Point3& n, const Geom::Point3& o, PointIdx start, PointIdx end) const;
-    double add_first_end(const Geom::Point3& n);
+    PointIdx add_first_end(const Geom::Point3& n);
     Geom::Point3 first_face_y_axis;
-    double bend_first_edge(int turn_step);
+    PointIdx bend_first_edge(int turn_step);
 };
 
-double TraceCenterObj3D::bend_first_edge(int turn_step) {
+// @return: offset of added point
+PointIdx TraceCenterObj3D::bend_first_edge(int turn_step) {
+    PointIdx added_offset = 0;
     double pi = std::acos(-1);
     double d_theta = pi / (turn_step * 2.0);
     double cos_t = std::cos(d_theta);
@@ -82,7 +84,6 @@ double TraceCenterObj3D::bend_first_edge(int turn_step) {
     double u, v, nextu, nextv;
     double d = 1;
     int ct = 0;
-    double min_z = 0;
     while (ct++ < turn_step && 1 + n.z > 1e-4) {
         vec_u.x = n.x; vec_u.y = n.y; vec_u.z = 0;
         vec_u.normalize();
@@ -95,25 +96,23 @@ double TraceCenterObj3D::bend_first_edge(int turn_step) {
         n.z = nextu * vec_u.z + nextv;
         n.normalize();
         n.x *= d; n.y *= d; n.z *= d;
-        min_z = std::min(min_z, add_first_end(n));
+        added_offset = add_first_end(n);
     }
-    return min_z;
+    return added_offset;
 }
 
-double TraceCenterObj3D::add_first_end(const Geom::Point3& n) {
+// @return: offset of added point
+PointIdx TraceCenterObj3D::add_first_end(const Geom::Point3& n) {
+    std::cerr << "called\n";
     Geom::Point3 a = center_points[front_face_idx];
     a.x += n.x; a.y += n.y; a.z += n.z;
     Geom::Point3 n_ {-n.x, -n.y, -n.z};
     first_face_y_axis = make_points_from_norm(n_, first_face_y_axis, a, slices.begin()->points);
-    double min_z = 0;
-    for (PointIdx i = points.size() - point_size_per_step; i < points.size(); i++) {
-        min_z = std::min(min_z, points[i].z);
-    }
     add_faces(step_size, front_face_idx);
     front_face_idx = step_size;
     step_size++;
     center_points.push_back(a);
-    return min_z;
+    return points.size() - slices.begin()->points.size();
 }
 
 void TraceCenterObj3D::make_norm_vecs() {

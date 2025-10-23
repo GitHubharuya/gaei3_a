@@ -28,7 +28,7 @@ struct TraceObj3D {
     virtual bool from_slices();
     virtual bool make_faces_from_slices();
 
-    void push_front_step(const std::vector<Geom::Point3>& add_points);
+    PointIdx push_front_step(const std::vector<Geom::Point3>& add_points);
     void add_faces(PointIdx s1, PointIdx s2);
     PointIdx front_face_idx = 0;
 };
@@ -140,7 +140,8 @@ void TraceObj3D::add_faces(PointIdx s1, PointIdx s2) {
     }
 }
 
-void TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
+// @return: offset of added points
+PointIdx TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
     if (add_points.size() != point_size_per_step) {
         std::cerr << "attempt to push front diffrent size points\n";
         std::exit(1);
@@ -150,6 +151,7 @@ void TraceObj3D::push_front_step(const std::vector<Geom::Point3>& add_points) {
     add_faces(step_size, front_face_idx);
     front_face_idx = step_size;
     step_size++;
+    return points.size() - point_size_per_step;
 }
 
 std::ostream& operator<<(std::ostream& ost, const TraceObj3D& obj) {
