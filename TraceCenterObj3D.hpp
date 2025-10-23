@@ -103,7 +103,6 @@ PointIdx TraceCenterObj3D::bend_first_edge(int turn_step) {
 
 // @return: offset of added point
 PointIdx TraceCenterObj3D::add_first_end(const Geom::Point3& n) {
-    std::cerr << "called\n";
     Geom::Point3 a = center_points[front_face_idx];
     a.x += n.x; a.y += n.y; a.z += n.z;
     Geom::Point3 n_ {-n.x, -n.y, -n.z};

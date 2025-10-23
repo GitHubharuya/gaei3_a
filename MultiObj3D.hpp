@@ -119,11 +119,18 @@ PointSize MultiObj3D::add_stand(double stand_z) {
     };
 
     for (PointSize i = 0; i < d.triangles.size(); i+=3) {
-        PointIdx f1 = get_pidx(d.triangles[i]);
-        PointIdx f2 = get_pidx(d.triangles[i + 1]);
-        PointIdx f3 = get_pidx(d.triangles[i + 2]);
-        // TODO: 反時計回りか, 同じobj同士でないか判定
-        faces.emplace_back(std::array<PointIdx, 3>{f1, f3, f2});
+        PointIdx tri1 = d.triangles[i];
+        PointIdx tri2 = d.triangles[i + 1];
+        PointIdx tri3 = d.triangles[i + 2];
+        if (cap_obj_idx[tri1] == cap_obj_idx[tri2] && cap_obj_idx[tri2] == cap_obj_idx[tri3]) {
+            continue;
+        }
+        PointIdx p1 = get_pidx(d.triangles[i]);
+        PointIdx p2 = get_pidx(d.triangles[i + 1]);
+        PointIdx p3 = get_pidx(d.triangles[i + 2]);
+        // TODO: 反時計回りか
+        std::array<PointIdx, 3> tri = {p1, p3, p2};
+        faces.emplace_back(tri);
     }
 
     stand_point_size = 8;
