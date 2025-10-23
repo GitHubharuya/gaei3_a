@@ -58,30 +58,18 @@ PointSize MultiObj3D::add_stand(double stand_z) {
     double stand_height = 10;
 
     stand_point_idx_begin = points.size();
-    points.emplace_back(Geom::Point3{
-        left, bottom, stand_z
-    });
-    points.emplace_back(Geom::Point3{
-        right, bottom, stand_z
-    });
-    points.emplace_back(Geom::Point3{
-        right, top, stand_z
-    });
-    points.emplace_back(Geom::Point3{
-        left, top, stand_z
-    });
-    points.emplace_back(Geom::Point3{
-        left, bottom, stand_z - stand_height
-    });
-    points.emplace_back(Geom::Point3{
-        right, bottom, stand_z - stand_height
-    });
-    points.emplace_back(Geom::Point3{
-        right, top, stand_z - stand_height
-    });
-    points.emplace_back(Geom::Point3{
-        left, top, stand_z - stand_height
-    });
+    std::vector<Geom::Point3> stand_points = {
+        Geom::Point3{ left, bottom, stand_z },
+        Geom::Point3{ right, bottom, stand_z },
+        Geom::Point3{ right, top, stand_z },
+        Geom::Point3{ left, top, stand_z },
+        Geom::Point3{ left, bottom, stand_z - stand_height },
+        Geom::Point3{ right, bottom, stand_z - stand_height },
+        Geom::Point3{ right, top, stand_z - stand_height },
+        Geom::Point3{ left, top, stand_z - stand_height },
+    };
+
+    points.insert(points.end(), stand_points.begin(), stand_points.end());
 
     // 四角形を三角形2つにする
     auto insert_rect_face = [&](std::array<PointIdx, 4> idxs) {
