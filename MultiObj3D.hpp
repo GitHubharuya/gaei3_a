@@ -40,22 +40,34 @@ PointSize MultiObj3D::add_stand(double stand_z) {
     double min_x = objs[0]->points[0].x;
     double max_y = objs[0]->points[0].y;
     double min_y = objs[0]->points[0].y;
+    double min_z = objs[0]->points[0].z;
+    double max_z = objs[0]->points[0].z;
     for (const auto& obj : objs) {
         for (const auto& p : obj->points) {
             max_x = std::max(max_x, p.x);
             min_x = std::min(min_x, p.x);
             max_y = std::max(max_y, p.y);
             min_y = std::min(min_y, p.y);
+            max_z = std::max(max_z, p.z);
+            min_z = std::min(min_z, p.z);
         }
     }
 
-    double xmargin = (max_x - min_x) * 0.2;
-    double ymargin = (max_y - min_y) * 0.2;
-    double left = min_x - xmargin;
-    double right = max_x + xmargin;
-    double bottom = min_y - ymargin;
-    double top = max_y + ymargin;
-    double stand_height = 10;
+    Geom::Point3 exact_size { max_x - min_x, max_y - min_y, max_z - min_z };
+    Geom::Point3 center { min_x + exact_size.x / 2.0, min_y + exact_size.y / 2.0, min_z + exact_size.z / 2.0, };
+    double xmargin = exact_size.x * 0.2;
+    double ymargin = exact_size.y * 0.2;
+    double min_length = exact_size.z / 3.0;
+    Geom::Point3 stand_size {
+        std::max(exact_size.x + 2.0 * xmargin, min_length),
+        std::max(exact_size.y + 2.0 * ymargin, min_length),
+        1.0
+    };
+    double left = center.x - stand_size.x / 2.0;
+    double right = center.x + stand_size.x / 2.0;
+    double bottom = center.y - stand_size.y / 2.0;
+    double top = center.y + stand_size.y / 2.0;
+    double stand_height = stand_size.z;
 
     stand_point_idx_begin = points.size();
     std::vector<Geom::Point3> stand_points = {
