@@ -77,12 +77,54 @@ PointSize MultiObj3D::add_stand(double stand_z) {
         faces.emplace_back(std::array<PointIdx, 3>{idxs[2], idxs[3], idxs[0]});
     };
 
-    PointIdx offset = stand_point_idx_begin;
-    insert_rect_face({ offset + 0, offset + 4, offset + 5, offset + 1, });
-    insert_rect_face({ offset + 1, offset + 5, offset + 6, offset + 2, });
-    insert_rect_face({ offset + 2, offset + 6, offset + 7, offset + 3, });
-    insert_rect_face({ offset + 3, offset + 7, offset + 4, offset + 0, });
-    insert_rect_face({ offset + 7, offset + 6, offset + 5, offset + 4, });
+    PointIdx stand_offset = stand_point_idx_begin;
+    insert_rect_face({ stand_offset + 0, stand_offset + 4, stand_offset + 5, stand_offset + 1, });
+    insert_rect_face({ stand_offset + 1, stand_offset + 5, stand_offset + 6, stand_offset + 2, });
+    insert_rect_face({ stand_offset + 2, stand_offset + 6, stand_offset + 7, stand_offset + 3, });
+    insert_rect_face({ stand_offset + 3, stand_offset + 7, stand_offset + 4, stand_offset + 0, });
+    insert_rect_face({ stand_offset + 7, stand_offset + 6, stand_offset + 5, stand_offset + 4, });
+
+    // attach face
+    std::vector<double> cap_xys;
+    std::vector<int> cap_obj_idx; // 点からそれが属するobjの添え字を得るテーブル. objs.size() の時は土台の点
+    std::vector<int> cap_obj_offset; // その点が属するobjの点がcap_xysで最初に現れる添え字
+    for (auto p : stand_points) {
+        if (p.z != stand_z) continue;
+        cap_xys.push_back(p.x);
+        cap_xys.push_back(p.y);
+        cap_obj_idx.push_back(objs.size());
+        cap_obj_offset.push_back(0);
+    }
+    for (PointIdx i = 0; i < objs.size(); i++) {
+        auto& obj = objs[i];
+        PointIdx end = first_point_face_offset[i] + obj->point_size_per_step;
+        int offset = cap_xys.size() / 2;
+        for (PointIdx j = first_point_face_offset[i]; j < end; j++) {
+            cap_xys.push_back(obj->points[j].x);
+            cap_xys.push_back(obj->points[j].y);
+            cap_obj_idx.push_back(i);
+            cap_obj_offset.push_back(offset);
+        }
+    }
+
+    delaunator::Delaunator d(cap_xys);
+    auto get_pidx = [&](PointIdx idx) -> PointIdx {
+        PointIdx obj_idx = cap_obj_idx[idx];
+        if (obj_idx == objs.size()) {
+            return idx + stand_offset;
+        }
+        PointIdx offset_in_obj = first_point_face_offset[obj_idx];
+        PointIdx relative_idx = idx - cap_obj_offset[idx];
+        return objs_point_offset[obj_idx] + offset_in_obj + relative_idx;
+    };
+
+    for (PointSize i = 0; i < d.triangles.size(); i+=3) {
+        PointIdx f1 = get_pidx(d.triangles[i]);
+        PointIdx f2 = get_pidx(d.triangles[i + 1]);
+        PointIdx f3 = get_pidx(d.triangles[i + 2]);
+        // TODO: 反時計回りか, 同じobj同士でないか判定
+        faces.emplace_back(std::array<PointIdx, 3>{f1, f3, f2});
+    }
 
     stand_point_size = 8;
     return 8; // stand point size
