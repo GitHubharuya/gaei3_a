@@ -18,6 +18,7 @@ struct MultiObj3D : TraceObj3D {
         // 親クラスの初期化
     }
 
+    double stand_height = 2.0;
     std::vector<TraceObj3D*> objs;
     PointIdx stand_point_idx_begin = 0;
     PointSize stand_point_size = 0;
@@ -61,13 +62,12 @@ PointSize MultiObj3D::add_stand(double stand_z) {
     Geom::Point3 stand_size {
         std::max(exact_size.x + 2.0 * xmargin, min_length),
         std::max(exact_size.y + 2.0 * ymargin, min_length),
-        1.0
+        stand_height
     };
     double left = center.x - stand_size.x / 2.0;
     double right = center.x + stand_size.x / 2.0;
     double bottom = center.y - stand_size.y / 2.0;
     double top = center.y + stand_size.y / 2.0;
-    double stand_height = stand_size.z;
 
     stand_point_idx_begin = points.size();
     std::vector<Geom::Point3> stand_points = {
