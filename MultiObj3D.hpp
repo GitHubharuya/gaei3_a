@@ -7,7 +7,7 @@
 struct MultiObj3D : TraceObj3D {
     MultiObj3D(const std::vector<TraceObj3D*>& _objs) {
         if (_objs.size() == 0) return;
-        objs = _objs;
+        children = _objs;
         points.clear(); faces.clear();
         double stand_z = attach_stand_objs();
         add_obj_points();
@@ -19,7 +19,7 @@ struct MultiObj3D : TraceObj3D {
     }
 
     double stand_height = 2.0;
-    std::vector<TraceObj3D*> objs;
+    std::vector<TraceObj3D*> children;
     PointIdx stand_point_idx_begin = 0;
     PointSize stand_point_size = 0;
 
@@ -27,6 +27,9 @@ struct MultiObj3D : TraceObj3D {
     bool make_points() override { return false; }
     bool make_faces_from_slices() override { return false; }
     bool from_slices() override { return false; }
+    PointIdx push_front_step(const std::vector<Geom::Point3>& add_points) override { return 0; }
+    void add_faces(PointIdx s1, PointIdx s2) override {}
+
 
     PointSize add_obj_points();
     PointSize add_stand(double stand_z);
@@ -37,13 +40,13 @@ struct MultiObj3D : TraceObj3D {
 };
 
 PointSize MultiObj3D::add_stand(double stand_z) {
-    double max_x = objs[0]->points[0].x;
-    double min_x = objs[0]->points[0].x;
-    double max_y = objs[0]->points[0].y;
-    double min_y = objs[0]->points[0].y;
-    double min_z = objs[0]->points[0].z;
-    double max_z = objs[0]->points[0].z;
-    for (const auto& obj : objs) {
+    double max_x = children[0]->points[0].x;
+    double min_x = children[0]->points[0].x;
+    double max_y = children[0]->points[0].y;
+    double min_y = children[0]->points[0].y;
+    double min_z = children[0]->points[0].z;
+    double max_z = children[0]->points[0].z;
+    for (const auto& obj : children) {
         for (const auto& p : obj->points) {
             max_x = std::max(max_x, p.x);
             min_x = std::min(min_x, p.x);
@@ -98,17 +101,17 @@ PointSize MultiObj3D::add_stand(double stand_z) {
 
     // attach face
     std::vector<double> cap_xys;
-    std::vector<int> cap_obj_idx; // 点からそれが属するobjの添え字を得るテーブル. objs.size() の時は土台の点
+    std::vector<int> cap_obj_idx; // 点からそれが属するobjの添え字を得るテーブル. children.size() の時は土台の点
     std::vector<int> cap_obj_offset; // その点が属するobjの点がcap_xysで最初に現れる添え字
     for (auto p : stand_points) {
         if (p.z != stand_z) continue;
         cap_xys.push_back(p.x);
         cap_xys.push_back(p.y);
-        cap_obj_idx.push_back(objs.size());
+        cap_obj_idx.push_back(children.size());
         cap_obj_offset.push_back(0);
     }
-    for (PointIdx i = 0; i < objs.size(); i++) {
-        auto& obj = objs[i];
+    for (PointIdx i = 0; i < children.size(); i++) {
+        auto& obj = children[i];
         PointIdx end = first_point_face_offset[i] + obj->point_size_per_step;
         int offset = cap_xys.size() / 2;
         for (PointIdx j = first_point_face_offset[i]; j < end; j++) {
@@ -122,7 +125,7 @@ PointSize MultiObj3D::add_stand(double stand_z) {
     delaunator::Delaunator d(cap_xys);
     auto get_pidx = [&](PointIdx idx) -> PointIdx {
         PointIdx obj_idx = cap_obj_idx[idx];
-        if (obj_idx == objs.size()) {
+        if (obj_idx == children.size()) {
             return idx + stand_offset;
         }
         PointIdx offset_in_obj = first_point_face_offset[obj_idx];
@@ -151,25 +154,25 @@ PointSize MultiObj3D::add_stand(double stand_z) {
 
 PointSize MultiObj3D::add_obj_points() {
     PointSize obj_point_size_all = 0;
-    for (const auto& obj : objs) {
+    for (const auto& obj : children) {
         obj_point_size_all += obj->points.size();
     }
     points.reserve(obj_point_size_all);
-    objs_point_offset.resize(objs.size());
-    for (PointIdx i = 0; i < objs.size(); i++) {
+    objs_point_offset.resize(children.size());
+    for (PointIdx i = 0; i < children.size(); i++) {
         objs_point_offset[i] = points.size();
-        points.insert(points.end(), objs[i]->points.begin(), objs[i]->points.end());
+        points.insert(points.end(), children[i]->points.begin(), children[i]->points.end());
     }
     return obj_point_size_all;
 }
 
 void MultiObj3D::add_shifted_face(PointSize offset) {
     PointSize obj_face_size = 0;
-    for (const auto& obj : objs) {
+    for (const auto& obj : children) {
         obj_face_size += obj->faces.size();
     }
     faces.reserve(obj_face_size);
-    for (const auto& obj : objs) {
+    for (const auto& obj : children) {
         for (const auto& face : obj->faces) {
             if (
                 face[0] >= 0 && face[0] < obj->point_size_per_step
@@ -191,11 +194,11 @@ void MultiObj3D::add_shifted_face(PointSize offset) {
 // @return: stand z coordinate
 double MultiObj3D::attach_stand_objs() {
     first_point_face_offset.clear();
-    first_point_face_offset.resize(objs.size(), 0);
+    first_point_face_offset.resize(children.size(), 0);
 
     int turn_step = 16;
-    for (PointIdx i = 0; i < objs.size(); i++) {
-        if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(objs[i])) {
+    for (PointIdx i = 0; i < children.size(); i++) {
+        if (auto curve_obj = dynamic_cast<TraceCenterObj3D*>(children[i])) {
             PointIdx added_offset = curve_obj->bend_first_edge(turn_step);
             if (added_offset != 0) {
                 first_point_face_offset[i] = added_offset;
@@ -207,8 +210,8 @@ double MultiObj3D::attach_stand_objs() {
     PointIdx min_z_idx = 0;
 
     bool first_point_found = false;
-    for (PointIdx i = 0; i < objs.size(); i++) {
-        auto& obj = objs[i];
+    for (PointIdx i = 0; i < children.size(); i++) {
+        auto& obj = children[i];
         PointIdx offset = first_point_face_offset[i];
         for (PointIdx j = 0; j < obj->point_size_per_step; j++) {
             double current_z = obj->points[offset + j].z;
@@ -225,17 +228,17 @@ double MultiObj3D::attach_stand_objs() {
     }
 
     // そろえる
-    for (PointIdx i = 0; i < objs.size(); i++) {
+    for (PointIdx i = 0; i < children.size(); i++) {
         if (i == min_z_idx) continue;
 
-        auto obj = objs[i];
+        auto obj = children[i];
         PointSize psize = obj->point_size_per_step;
         std::vector<Geom::Point3> add_ps(psize);
         for (PointIdx j = 0; j < psize; j++) {
             add_ps[j] = obj->points[first_point_face_offset[i] + j];
             add_ps[j].z = min_z;
         }
-        first_point_face_offset[i] = objs[i]->push_front_step(add_ps);
+        first_point_face_offset[i] = children[i]->push_front_step(add_ps);
     }
 
     return min_z;

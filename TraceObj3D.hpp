@@ -28,8 +28,8 @@ struct TraceObj3D {
     virtual bool from_slices();
     virtual bool make_faces_from_slices();
 
-    PointIdx push_front_step(const std::vector<Geom::Point3>& add_points);
-    void add_faces(PointIdx s1, PointIdx s2);
+    virtual PointIdx push_front_step(const std::vector<Geom::Point3>& add_points);
+    virtual void add_faces(PointIdx s1, PointIdx s2);
     PointIdx front_face_idx = 0;
 };
 
