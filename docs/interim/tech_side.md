@@ -54,12 +54,12 @@ flowchart TB
 
 ### 軌跡を「太らせる」処理
 ベクトル $\boldsymbol{n}$ ($|\boldsymbol{n}| = 1$) に対して, これを法線とする平面に2Dの座標 $(p_x, p_y)$ をマッピングする.
-1. $\boldsymbol{n}$ と平行でない長さ$1$ の適当なベクトル $\boldsymbol{t}$ を用意する
+1. $\boldsymbol{n}$ と平行でない長さ $1$ の適当なベクトル $\boldsymbol{t}$ を用意する
 2. $\boldsymbol{u} := \boldsymbol{t} \times \boldsymbol{n}$ とし, $\boldsymbol{u}$ の長さを $1$ にする
 3. $\boldsymbol{v} := \boldsymbol{t} \times \boldsymbol{n}$ とし, $\boldsymbol{v}$ の長さを $1$ にする
 4. $p_x \boldsymbol{u} + p_y \boldsymbol{v}$ を対応する点とする
 
-$\boldsymbol{t}$ の取り方について, 最初は $\boldsymbol{t} = (0, 1, 0)$ として, ほぼ平行だったら$(0, 0, 1)$ に切り替える.
+$\boldsymbol{t}$ の取り方について, 最初は $\boldsymbol{t} = (0, 1, 0)$ として, ほぼ平行だったら $(0, 0, 1)$ に切り替える.
 2回目以降は直前の $\boldsymbol{v}$ を $\boldsymbol{t}$ として使うと, 直前に作った平面とつないだ時に自然な座標が得られる.
 
 ### オブジェクトの端を指定の方向に曲げる
