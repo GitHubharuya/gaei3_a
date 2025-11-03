@@ -10,3 +10,8 @@
 - [芸術的側面](./art_side.md)
 - [技術的側面](./tech_side.md)
 - [教育的側面](./edu_side.md)
+
+## ギャラリー
+![二重振り子の二つの重りの軌跡](./img/double_pendulum00.png)
+![回転しながら大きさを変える三角形](./img/tornado.png)
+![リサージュ図形](./img/lissajous_z00.png)
