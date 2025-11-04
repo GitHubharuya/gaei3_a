@@ -51,7 +51,7 @@ def step():
 # ===== 三角形の座標を求める関数 =====
 def get_triangle_points(x, y, direction):
     # 向きに応じた回転角（ラジアン）
-    angle = direction * np.pi / 2
+    angle = direction * np.pi / 2 / 3 #pi/6 = 30度
     R = np.array([[np.cos(angle), -np.sin(angle)],
                   [np.sin(angle),  np.cos(angle)]])
     rotated = triangle_shape @ R.T
@@ -71,8 +71,13 @@ for line in triangle_positions:
         print(line)
 
 # ===== アニメーション描画 =====
+# ★★★ アニメーションのために状態をリセット ★★★
+grid = np.zeros((grid_size, grid_size), dtype=int)
+x, y = grid_size // 2, grid_size // 2
+direction = 0  # 0:上, 1:右, 2:下, 3:左
+
 fig, ax = plt.subplots()
-im = ax.imshow(grid, cmap='binary', origin='upper')
+im = ax.imshow(grid, cmap='binary', origin='upper', vmin=0, vmax=1)
 tri_patch, = ax.plot([], [], 'r-', lw=1.5)
 
 ax.set_title("Langton's Ant (Triangle Representation)")
