@@ -32,11 +32,11 @@ struct Point3 {
     }
 };
 
-double dot_prod(const Point3 a, const Point3 b) {
+double dot_prod(const Point3& a, const Point3& b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-Point3 cross_prod(const Point3 a, const Point3 b) {
+Point3 cross_prod(const Point3& a, const Point3& b) {
     double cx = a.y * b.z - a.z * b.y;
     double cy = -a.x * b.z + a.z * b.x;
     double cz = a.x * b.y - a.y * b.x;
