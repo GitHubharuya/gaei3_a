@@ -21,3 +21,4 @@
 ![二重振り子の二つの重りの軌跡](./img/double_pendulum00.png)
 ![回転しながら大きさを変える三角形](./img/tornado.png)
 ![リサージュ図形](./img/lissajous_z00.png)
+![ラングトンのアリ](./img/ant00.png)
