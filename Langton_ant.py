@@ -51,12 +51,15 @@ def step():
 # ===== 三角形の座標を求める関数 =====
 def get_triangle_points(x, y, direction):
     # 向きに応じた回転角（ラジアン）
-    angle = direction * np.pi / 2 / 3 #pi/6 = 30度
+    angle = direction * np.pi / 2
     R = np.array([[np.cos(angle), -np.sin(angle)],
                   [np.sin(angle),  np.cos(angle)]])
     rotated = triangle_shape @ R.T
     translated = rotated + np.array([x, y])
     return translated
+
+for i in range(9600):
+    step()
 
 # ===== シミュレーション＋出力 =====
 for i in range(steps):
@@ -65,6 +68,7 @@ for i in range(steps):
         tri = get_triangle_points(x, y, direction)
         flat = " ".join(f"{p[0]*scale:.3f} {p[1]*scale:.3f}" for p in tri)
         triangle_positions.append(f"{i}, {flat}")
+
 
 # ===== 標準出力 =====
 for line in triangle_positions:
@@ -75,6 +79,9 @@ for line in triangle_positions:
 grid = np.zeros((grid_size, grid_size), dtype=int)
 x, y = grid_size // 2, grid_size // 2
 direction = 0  # 0:上, 1:右, 2:下, 3:左
+
+for i in range(9600):
+    step()
 
 fig, ax = plt.subplots()
 im = ax.imshow(grid, cmap='binary', origin='upper', vmin=0, vmax=1)
