@@ -56,9 +56,10 @@ struct TraceCenterObj3D : public TraceObj3D {
     std::vector<Geom::Point3> norm_vecs;
     bool is_same_slice = false;
     bool make_points() override;
+    int count_make_point_call = 0;
     void make_norm_vecs();
     Geom::Point3 make_points_from_norm(const Geom::Point3& n, const Geom::Point3& t, const Geom::Point3& a, const std::vector<Geom::Point2>& points2D);
-    bool check_intersect() const;
+    bool check_intersect(std::vector<PointIdx>& intercect_step_info) const;
     bool is_front_points(const Geom::Point3& n, const Geom::Point3& o, PointIdx start, PointIdx end) const;
 };
 
@@ -101,6 +102,10 @@ Geom::Point3 TraceCenterObj3D::make_points_from_norm(const Geom::Point3& n, cons
 
 bool TraceCenterObj3D::make_points() {
 
+    count_make_point_call++;
+    points.clear();
+    norm_vecs.clear();
+
     Geom::Point3 first_n {
         center_points[1].x - center_points[0].x,
         center_points[1].y - center_points[0].y,
@@ -137,9 +142,20 @@ bool TraceCenterObj3D::make_points() {
         slices.back().points
     );
 
-    if (!check_intersect()) {
-        std::cerr << "交差を検出\n";
-        return false;
+    std::vector<PointIdx> intercect_step_info;
+    if (!check_intersect(intercect_step_info)) {
+        std::cerr << count_make_point_call << "回目: " << intercect_step_info.size() << " ステップの交差を検出\n";
+        double offset = 0.0;
+        double eps = 1e-4;
+        PointIdx isi = 0;
+        for (PointIdx i = intercect_step_info[isi]; i < center_points.size(); i++) {
+            if (isi < intercect_step_info.size() && i == intercect_step_info[isi]) {
+                offset += eps;
+                isi++;
+            }
+            center_points[i].z += offset;
+        }
+        make_points();
     }
 
     return true;
@@ -159,28 +175,29 @@ bool TraceCenterObj3D::is_front_points(const Geom::Point3& n, const Geom::Point3
     return true;
 }
 
-bool TraceCenterObj3D::check_intersect() const {
+bool TraceCenterObj3D::check_intersect(std::vector<PointIdx>& intercect_step_info) const {
+    // 最初の面をチェック
+    PointSize origin_size = intercect_step_info.size();
+    bool is_front = is_front_points(
+        Geom::Point3{ -norm_vecs[0].x, -norm_vecs[0].y, -norm_vecs[0].z },
+        center_points[1],
+        0, point_size_per_step
+    );
+    if (!is_front) {
+        intercect_step_info.push_back(1); // オフセットを追加する面
+    }
+
     for (PointSize i = 0; i < norm_vecs.size(); i++) {
-        PointIdx start = point_size_per_step * i;
-        PointIdx end = point_size_per_step * (i + 1);
-        if (!is_front_points(
-            Geom::Point3{
-                - norm_vecs[i].x, - norm_vecs[i].y, - norm_vecs[i].z
-            },
-            center_points[i + 1], // 最初の点を除く
-            start, end)
-        ) {
-            return false;
-        }
-        start = point_size_per_step * (i + 2);
-        end = point_size_per_step * (i + 3);
-        if (!is_front_points(
+        PointIdx start = point_size_per_step * (i + 2);
+        PointIdx end = point_size_per_step * (i + 3);
+        is_front = is_front_points(
             norm_vecs[i],
-            center_points[i + 1], // 最初の点を除く
-            start, end)
-        ) {
-            return false;
+            center_points[i + 1], // 最初の面を除く
+            start, end
+        );
+        if (!is_front) {
+            intercect_step_info.push_back(i+2); // オフセットを追加する面
         }
     }
-    return true;
+    return intercect_step_info.size() == origin_size;
 }
