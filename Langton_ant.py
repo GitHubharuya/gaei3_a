@@ -48,10 +48,13 @@ def step():
     x %= grid_size
     y %= grid_size
 
+
+ana = 10
 # ===== 三角形の座標を求める関数 =====
 def get_triangle_points(x, y, direction):
     # 向きに応じた回転角（ラジアン）
-    angle = direction * np.pi / 2
+    # 30度
+    angle = direction * np.pi / 2 / ana
     R = np.array([[np.cos(angle), -np.sin(angle)],
                   [np.sin(angle),  np.cos(angle)]])
     rotated = triangle_shape @ R.T
@@ -64,10 +67,10 @@ for i in range(9600):
 # ===== シミュレーション＋出力 =====
 for i in range(steps):
     step()
-    if i % output_interval == 0:
-        tri = get_triangle_points(x, y, direction)
+    for j in range(ana):
+        tri = get_triangle_points(x, y, direction*(j+1))
         flat = " ".join(f"{p[0]*scale:.3f} {p[1]*scale:.3f}" for p in tri)
-        triangle_positions.append(f"{i}, {flat}")
+        triangle_positions.append(f"{i*ana+j}, {flat}")
 
 
 # ===== 標準出力 =====
@@ -76,36 +79,36 @@ for line in triangle_positions:
 
 # ===== アニメーション描画 =====
 # ★★★ アニメーションのために状態をリセット ★★★
-grid = np.zeros((grid_size, grid_size), dtype=int)
-x, y = grid_size // 2, grid_size // 2
-direction = 0  # 0:上, 1:右, 2:下, 3:左
-
-for i in range(9600):
-    step()
-
-fig, ax = plt.subplots()
-im = ax.imshow(grid, cmap='binary', origin='upper', vmin=0, vmax=1)
-tri_patch, = ax.plot([], [], 'r-', lw=1.5)
-
-ax.set_title("Langton's Ant (Triangle Representation)")
-ax.set_xlim(0, grid_size)
-ax.set_ylim(grid_size, 0)  # y軸を上方向に反転
-
-def init():
-    im.set_data(grid)
-    tri_patch.set_data([], [])
-    return im, tri_patch
-
-def update(frame):
-    step()
-    im.set_data(grid)
-    tri = get_triangle_points(x, y, direction)
-    xs, ys = np.append(tri[:,0], tri[0,0]), np.append(tri[:,1], tri[0,1])
-    tri_patch.set_data(xs, ys)
-    ax.set_xlabel(f"Step: {frame}")
-    return im, tri_patch
-
-ani = FuncAnimation(fig, update, frames=steps, init_func=init,
-                    interval=1, blit=True, repeat=False)
-
-plt.show()
+# grid = np.zeros((grid_size, grid_size), dtype=int)
+# x, y = grid_size // 2, grid_size // 2
+# direction = 0  # 0:上, 1:右, 2:下, 3:左
+# 
+# for i in range(9600):
+#     step()
+# 
+# fig, ax = plt.subplots()
+# im = ax.imshow(grid, cmap='binary', origin='upper', vmin=0, vmax=1)
+# tri_patch, = ax.plot([], [], 'r-', lw=1.5)
+# 
+# ax.set_title("Langton's Ant (Triangle Representation)")
+# ax.set_xlim(0, grid_size)
+# ax.set_ylim(grid_size, 0)  # y軸を上方向に反転
+# 
+# def init():
+#     im.set_data(grid)
+#     tri_patch.set_data([], [])
+#     return im, tri_patch
+# 
+# def update(frame):
+#     step()
+#     im.set_data(grid)
+#     tri = get_triangle_points(x, y, direction)
+#     xs, ys = np.append(tri[:,0], tri[0,0]), np.append(tri[:,1], tri[0,1])
+#     tri_patch.set_data(xs, ys)
+#     ax.set_xlabel(f"Step: {frame}")
+#     return im, tri_patch
+# 
+# ani = FuncAnimation(fig, update, frames=steps, init_func=init,
+#                     interval=1, blit=True, repeat=False)
+# 
+# plt.show()
