@@ -5,8 +5,10 @@
 #include "TraceObj3D.hpp"
 
 struct LayerObj3D : public TraceObj3D {
-    double LENGTH_PER_TIME = 1;
-    LayerObj3D(double lpt) : LENGTH_PER_TIME(lpt) {};
+    double TOTAL_SIZE = 100;
+    double INTERPOLATE_SIZE = 0;
+    LayerObj3D(double _total_size) : TOTAL_SIZE(_total_size) {};
+    LayerObj3D(double _total_size, int _interpolate_size) : TOTAL_SIZE(_total_size), INTERPOLATE_SIZE(_interpolate_size) {};
     LayerObj3D() {};
     std::vector<Slice> slices;
     bool make_points() override;
@@ -17,13 +19,14 @@ bool LayerObj3D::make_points() {
     points.clear();
     points.reserve(slices.size());
     double z = 0;
+    double length_per_time = TOTAL_SIZE / slices.size();
     for (PointSize i = 0; i < slices.size(); i++) {
         for (const auto& p : slices[i].points) {
             points.emplace_back(Geom::Point3{
                 p.x, p.y, z
             });
         }
-        z += LENGTH_PER_TIME;
+        z += length_per_time;
     }
     return true;
 }
