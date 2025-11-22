@@ -19,7 +19,7 @@ struct LayerObj3D : public TraceObj3D {
 
 bool LayerObj3D::make_points() {
     points.clear();
-    points.reserve(slices.size());
+    points.reserve(slices.size() * slices[0].points.size();
     double z = 0;
     double length_per_time = TOTAL_SIZE / slices.size();
     for (PointSize i = 0; i < slices.size(); i++) {
