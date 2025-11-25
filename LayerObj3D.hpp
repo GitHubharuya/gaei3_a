@@ -19,7 +19,7 @@ struct LayerObj3D : public TraceObj3D {
 
 bool LayerObj3D::make_points() {
     points.clear();
-    points.reserve(slices.size() * slices[0].points.size();
+    points.reserve(slices.size() * slices[0].points.size());
     double z = 0;
     double length_per_time = TOTAL_SIZE / slices.size();
     for (PointSize i = 0; i < slices.size(); i++) {
@@ -62,7 +62,7 @@ std::istream& operator>>(std::istream& ist, LayerObj3D& obj) {
     }
 
     is_ok &= obj.check_slice_point_size();
-    is_ok &= obj.from_slices(INTERPOLATE_SIZE);
+    is_ok &= obj.from_slices(obj.INTERPOLATE_SIZE);
 
     if (!is_ok) {
         // スライスからの生成に失敗
@@ -72,13 +72,13 @@ std::istream& operator>>(std::istream& ist, LayerObj3D& obj) {
 }
 
 bool LayerObj3D::from_slices(int interpolate_size) {
-    if (INTERPOLATE_SIZE == 0) {
-        return obj.from_slices();
+    if (interpolate_size == 0) {
+        return TraceObj3D::from_slices();
     }
 
     bool is_ok = true;
     // 線形補間が指定されている場合は, 線形補間付き make_points を呼び出す
-    is_ok &= make_points(INTERPOLATE_SIZE);
+    is_ok &= make_points(interpolate_size);
     is_ok &= make_faces_from_slices();
     return is_ok;
 }
