@@ -34,7 +34,7 @@ if __name__ == "__main__":
     
     # VideoWriterを初期化
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-    print(f"処理結果を {output_path} に書き出します。")
+    print(f"処理結果を {output_path} に書き出します。", file=sys.stderr)
     
     
     # --- 姿勢推定のメインループ ---
