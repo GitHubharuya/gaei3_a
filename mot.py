@@ -23,7 +23,7 @@ while cap.isOpened():
     success, frame = cap.read() 
     if success: 
         frame_count += 1
-        results = model.track(frame, persist=True) 
+        results = model.track(frame, persist=True, verbose=False) 
         boxes = results[0].boxes.xywh.cpu() 
         track_ids = results[0].boxes.id.int().cpu().tolist()  
         annotated_frame = results[0].plot() 
