@@ -7,7 +7,7 @@ import numpy as np
 from ultralytics import YOLO
 
 model = YOLO("yolo11n.pt")
-video_path = "sample3.mp4"
+video_path = "sample5.mp4"
 cap = cv2.VideoCapture(video_path)
 track_history = defaultdict(lambda: [])
 m = 0 #ステップ数をカウント
@@ -19,6 +19,8 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 cv2.namedWindow("YOLO11 Tracking", cv2.WINDOW_NORMAL) 
 cv2.resizeWindow("YOLO11 Tracking", width, height) 
 
+first_frame_ids=set()
+
 while cap.isOpened(): 
     success, frame = cap.read() 
     if success: 
@@ -27,6 +29,11 @@ while cap.isOpened():
         boxes = results[0].boxes.xywh.cpu() 
         track_ids = results[0].boxes.id.int().cpu().tolist()  
         annotated_frame = results[0].plot() 
+
+        if frame_count == 1:
+            for track_id in track_ids:
+                first_frame_ids.add(track_id)
+
         for box, track_id in zip(boxes, track_ids): #各検出物体について
             if frame_count % 5 == 0: #5フレームに1回軌跡を更新
                 m += 1 #ステップ数をカウント
@@ -47,9 +54,11 @@ cv2.destroyAllWindows()
 
 n=len(track_history.keys()) #検出された物体の数
 
-print(m,n) 
+print(len(first_frame_ids)) 
 
-for tid in sorted(track_history.keys()):
-    for x, y in track_history[tid]:
-        print(x, y)
+for tid in sorted(first_frame_ids):
+    if tid in track_history:
+        print(len(track_history[tid]))
+        for x, y in track_history[tid]:
+            print(x, y)
     print("")  #各物体の軌跡を区切るための改行
