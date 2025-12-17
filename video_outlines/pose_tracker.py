@@ -174,10 +174,10 @@ if __name__ == "__main__":
                 # 1. フレーム番号を出力開始
                 output_line = f"{frame_num}, "
 
-#                # 2. すべての固定座標をリストに追加 (x y 形式で結合)
-#                coords = []
-#                for x, y in fixed_points_array:
-#                    coords.append(f"{int(x)} {int(y)+50}")
+                # 2. すべての固定座標をリストに追加 (x y 形式で結合)
+                # coords = []
+                # for x, y in fixed_points_array:
+                #     coords.append(f"{int(x)} {int(y)+50}")
 
                 rd_x = 1000
                 rd_y = 0
