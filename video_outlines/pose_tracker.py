@@ -48,7 +48,7 @@ def scan_video_for_contour_stats(video_path, pose_model):
     max_points = 0
     min_points = float('inf')
 
-    print("--- 動画スキャン (Pass 1) を開始 ---")
+    print("--- 動画スキャン (Pass 1) を開始 ---", file=sys.stderr)
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -76,7 +76,7 @@ def scan_video_for_contour_stats(video_path, pose_model):
     cap.release()
 
     final_min = min_points if min_points != float('inf') else 0
-    print(f"スキャン完了: 最大輪郭点数={max_points}, 最小輪郭点数={final_min}")
+    print(f"スキャン完了: 最大輪郭点数={max_points}, 最小輪郭点数={final_min}", file=sys.stderr)
 
     return max_points, final_min
 
@@ -87,8 +87,8 @@ def scan_video_for_contour_stats(video_path, pose_model):
 if __name__ == "__main__":
     # 引数チェック
     if len(sys.argv) < 2:
-        print("--- 使い方 ---")
-        print("動画ファイル名を引数として指定してください。")
+        print("--- 使い方 ---", file=sys.stderr)
+        print("動画ファイル名を引数として指定してください。", file=sys.stderr)
         sys.exit(1)
 
     input_source = sys.argv[1]
@@ -97,20 +97,20 @@ if __name__ == "__main__":
 
     # ファイル存在チェック
     if not os.path.exists(video_path):
-        print(f"エラー: 指定されたファイル '{video_path}' が見つかりません。")
+        print(f"エラー: 指定されたファイル '{video_path}' が見つかりません。", file=sys.stderr)
         sys.exit(1)
 
     # 1. 動画スキャン (Pass 1) を実行し、統計情報を取得
     max_points, min_points = scan_video_for_contour_stats(video_path, pose)
 
     if max_points == 0:
-        print("エラー: 動画全体で人物輪郭を検出できませんでした。処理を終了します。")
+        print("エラー: 動画全体で人物輪郭を検出できませんでした。処理を終了します。", file=sys.stderr)
         sys.exit(1)
 
     # 2. 固定点数 (N_fixed) の決定ロジック
     # N_fixed = min(N_max, 2 * N_min)
     target_fixed_points = max_points
-    print(f"決定された固定輪郭点数 (N_fixed): {target_fixed_points} 点")
+    print(f"決定された固定輪郭点数 (N_fixed): {target_fixed_points} 点", file=sys.stderr)
 
     # ------------------------------------------------------------------
     # 3. メイン処理 (Pass 2) を開始
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     # 動画書き出し設定 (メインループ前に行う)
     if not cap.isOpened():
-        print(f"エラー: 動画ファイル {video_path} を開けませんでした。")
+        print(f"エラー: 動画ファイル {video_path} を開けませんでした。", file=sys.stderr)
         sys.exit(1)
 
     # 動画の情報を取得
@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     # VideoWriterを初期化
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-    print(f"処理結果を {output_path} に書き出します。")
+    print(f"処理結果を {output_path} に書き出します。", file=sys.stderr)
 
 
     # --- 姿勢推定のメインループ (Pass 2) ---
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         frame_num += 1
 
         if not ret:
-            print(f"フレーム {frame_num} で読み込み失敗/終了。")
+            print(f"フレーム {frame_num} で読み込み失敗/終了。", file=sys.stderr)
             break
 
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -225,4 +225,4 @@ if __name__ == "__main__":
     cap.release()
     out.release() # VideoWriterを閉じる
     cv2.destroyAllWindows()
-    print(f"動画処理が完了しました。ファイル: {output_path}")
+    print(f"動画処理が完了しました。ファイル: {output_path}", file=sys.stderr)
