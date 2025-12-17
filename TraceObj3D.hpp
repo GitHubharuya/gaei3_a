@@ -2,7 +2,7 @@
 
 #include "Geom.hpp"
 #include "Slice.hpp"
-#include "delaunator.hpp"
+#include "earcut.hpp"
 
 #include <array>
 #include <vector>
@@ -24,6 +24,7 @@ struct TraceObj3D {
 
     bool make_side_faces();
     bool make_top_bottom_face();
+    std::vector<std::array<PointIdx, 3>> get_face_indices(std::vector<uint32_t>& indices);
     virtual bool make_points() = 0; // 仮想関数
     virtual bool from_slices();
     virtual bool make_faces_from_slices();
@@ -46,41 +47,41 @@ bool TraceObj3D::make_side_faces() {
     return true;
 }
 
+std::vector<std::array<PointIdx, 3>> TraceObj3D::get_face_indices(std::vector<uint32_t>& indices) {
+    std::vector<std::array<PointIdx, 3>> res;
+    res.reserve(indices.size() / 3);
+    for (size_t i = 0; i < indices.size(); i+=3) {
+        res.emplace_back(std::array<PointIdx, 3>{
+            indices[i], indices[i+1], indices[i+2]
+        });
+    }
+    return res;
+}
+
 bool TraceObj3D::make_top_bottom_face() {
     if (step_size == 0) { return false; }
 
     // 三角形分割
-    std::vector<double> begin_face_xy(point_size_per_step * 2);
-    std::vector<double> end_face_xy(point_size_per_step * 2);
+    std::vector<std::array<double, 2>> begin_face_xy(point_size_per_step);
+    std::vector<std::array<double, 2>> end_face_xy(point_size_per_step);
 
-    // Delaunator に渡すために { x0,  y0, x1, y1, ... } の vector に格納
-    // https://github.com/delfrrr/delaunator-cpp/blob/master/examples/basic.cpp
     for (PointSize i = 0; i < point_size_per_step; i++) {
-        begin_face_xy[2*i] = first_slice.points[i].x;
-        begin_face_xy[2*i+1] = first_slice.points[i].y;
-        end_face_xy[2*i] = last_slice.points[i].x;
-        end_face_xy[2*i+1] = last_slice.points[i].y;
+        begin_face_xy[i][0] = first_slice.points[i].x;
+        begin_face_xy[i][1] = first_slice.points[i].y;
+        end_face_xy[i][0] = last_slice.points[i].x;
+        end_face_xy[i][1] = last_slice.points[i].y;
     }
-    delaunator::Delaunator d1(begin_face_xy);
-    delaunator::Delaunator d2(end_face_xy);
+
+    auto indices_first = mapbox::earcut<uint32_t>( std::vector<std::vector<std::array<double, 2>>>{begin_face_xy} );
+    auto indices_last = mapbox::earcut<uint32_t>( std::vector<std::vector<std::array<double, 2>>>{end_face_xy} );
+
     PointIdx end_fece_offset = (step_size - 1) * point_size_per_step;
-    decltype(faces) begin_face;
-    decltype(faces) end_face;
-    begin_face.reserve(d1.triangles.size()/3);
-    end_face.reserve(d2.triangles.size()/3);
-    for (PointSize i = 0; i < d1.triangles.size(); i+=3) {
-        begin_face.push_back({
-            static_cast<unsigned long>(d1.triangles[i]),
-            static_cast<unsigned long>(d1.triangles[i+1]),
-            static_cast<unsigned long>(d1.triangles[i+2])
-        });
-    }
-    for (PointSize i = 0; i < d2.triangles.size(); i+=3) {
-        end_face.push_back({
-            static_cast<unsigned long>(d2.triangles[i] + end_fece_offset),
-            static_cast<unsigned long>(d2.triangles[i+1] + end_fece_offset),
-            static_cast<unsigned long>(d2.triangles[i+2] + end_fece_offset)
-        });
+    std::vector<std::array<PointIdx, 3>> begin_face = get_face_indices(indices_first);
+    std::vector<std::array<PointIdx, 3>> end_face = get_face_indices(indices_last);
+    for (auto& tri : end_face) {
+        tri[0] += end_fece_offset;
+        tri[1] += end_fece_offset;
+        tri[2] += end_fece_offset;
     }
 
     // check direction
