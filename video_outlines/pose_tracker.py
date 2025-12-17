@@ -198,7 +198,8 @@ if __name__ == "__main__":
 
                 # 3. リストをスペース区切りで結合し、フレーム番号の後ろに出力
                 output_line += " ".join(coords)
-                for _ in range(10):
+                dup_num = 2
+                for _ in range(dup_num):
                     print(output_line)
 
                 cnt = 0
