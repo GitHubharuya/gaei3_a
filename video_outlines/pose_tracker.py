@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
                 coords = []
                 for x,y in fixed_points_array:
-                   coords.append(f"{int(x)} {int(y)}")
+                   coords.append(f"{int(x)} {int(-y)}")
                 #coords.append(f"{int(rd_x)} {int(rd_y)}")
                 #coords.append(f"{int(ld_x)} {int(ld_y)}")
                 #coords.append(f"{int(ru_x)} {int(ru_y)}")
