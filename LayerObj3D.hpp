@@ -4,15 +4,40 @@
 #include <vector>
 #include "TraceObj3D.hpp"
 
+// Catmull-Rom spline interpolation
+inline Geom::Point2 spline_interpolate(const Geom::Point2& p0, const Geom::Point2& p1, const Geom::Point2& p2, const Geom::Point2& p3, double t) {
+    double t2 = t * t;
+    double t3 = t2 * t;
+
+    double x = 0.5 * ((2 * p1.x) +
+                      (-p0.x + p2.x) * t +
+                      (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+                      (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+    double y = 0.5 * ((2 * p1.y) +
+                      (-p0.y + p2.y) * t +
+                      (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+                      (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+    return Geom::Point2{x, y};
+}
+
+enum class InterpolationType {
+    Linear,
+    Spline
+};
+
 struct LayerObj3D : public TraceObj3D {
     double TOTAL_SIZE = 100;
     double INTERPOLATE_SIZE = 0;
+    InterpolationType interpolation_type = InterpolationType::Spline;
     LayerObj3D(double _total_size) : TOTAL_SIZE(_total_size) {};
     LayerObj3D(double _total_size, int _interpolate_size) : TOTAL_SIZE(_total_size), INTERPOLATE_SIZE(_interpolate_size) {};
+    LayerObj3D(double _total_size, int _interpolate_size, InterpolationType _interp_type) : TOTAL_SIZE(_total_size), INTERPOLATE_SIZE(_interpolate_size), interpolation_type(_interp_type) {};
     LayerObj3D() {};
     std::vector<Slice> slices;
     bool make_points() override;
-    bool make_points(int interpolate_size);
+    bool make_points(int interpolate_size, InterpolationType interp_type);
     bool from_slices(int interpolate_size);
     bool check_slice_point_size() const;
 };
@@ -33,7 +58,7 @@ bool LayerObj3D::make_points() {
     return true;
 }
 
-bool LayerObj3D::make_points(int interpolate_size) {
+bool LayerObj3D::make_points(int interpolate_size, InterpolationType interp_type) {
     // 最後の層以外の間で interpolate_size 個の層が追加される
     PointSize exact_slice_size = (slices.size() - 1) * (interpolate_size + 1) + 1;
     PointSize total_point_size = exact_slice_size * slices[0].points.size();
@@ -46,13 +71,24 @@ bool LayerObj3D::make_points(int interpolate_size) {
     for (PointSize i = 0; i < slices.size() - 1; i++) {
         for (int polate_rate = 0; polate_rate < interpolate_size + 1; polate_rate++) {
             for (PointSize j = 0; j < slices[i].points.size(); j++) {
-                Geom::Point2 p = slices[i].points[j];
-                Geom::Point2 q = slices[i + 1].points[j];
                 double t = (double)polate_rate / (interpolate_size + 1);
-                double x = p.x * (1 - t) + q.x * t;
-                double y = p.y * (1 - t) + q.y * t;
+                Geom::Point2 p;
+
+                if (interp_type == InterpolationType::Linear) {
+                    Geom::Point2 p1 = slices[i].points[j];
+                    Geom::Point2 p2 = slices[i + 1].points[j];
+                    double x = p1.x * (1 - t) + p2.x * t;
+                    double y = p1.y * (1 - t) + p2.y * t;
+                    p = Geom::Point2{x, y};
+                } else { // Spline
+                    Geom::Point2 p0 = (i > 0) ? slices[i - 1].points[j] : slices[i].points[j];
+                    Geom::Point2 p1 = slices[i].points[j];
+                    Geom::Point2 p2 = slices[i + 1].points[j];
+                    Geom::Point2 p3 = (i < slices.size() - 2) ? slices[i + 2].points[j] : slices[i + 1].points[j];
+                    p = spline_interpolate(p0, p1, p2, p3, t);
+                }
                 points.emplace_back(Geom::Point3{
-                    x, y, z
+                    p.x, p.y, z
                 });
             }
             z += length_per_time;
@@ -116,7 +152,7 @@ bool LayerObj3D::from_slices(int interpolate_size) {
 
     bool is_ok = true;
     // 線形補間が指定されている場合は, 線形補間付き make_points を呼び出す
-    is_ok &= make_points(interpolate_size);
+    is_ok &= make_points(interpolate_size, interpolation_type);
     is_ok &= make_faces_from_slices();
     return is_ok;
 }
